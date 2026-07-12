@@ -2,20 +2,19 @@ import React from 'react';
 import { Landmark, History, LineChart } from 'lucide-react';
 
 /**
- * Navbar Component
- * Renders the top navigation header for the Investment Research Terminal in a polished light theme.
+ * Navbar Component in Metallic Steel-Blue Theme
  */
 export default function Navbar({ activePage, setActivePage }) {
   return (
-    <nav className="bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between sticky top-0 z-50 shadow-sm">
+    <nav className="bg-white/40 backdrop-blur-md border-b border-slate-200/50 px-6 py-4 flex items-center justify-between sticky top-0 z-50 shadow-sm">
       {/* Brand Logo & Title */}
       <div className="flex items-center space-x-3 cursor-pointer" onClick={() => setActivePage('home')}>
-        <div className="bg-blue-600 p-2 rounded-lg text-white shadow-md shadow-blue-600/10">
-          <Landmark className="w-6 h-6" />
+        <div className="bg-blue-600 p-2 rounded text-white shadow-md shadow-blue-600/10">
+          <Landmark className="w-5 h-5" />
         </div>
         <div>
-          <h1 className="text-xl font-extrabold text-[#0f172a] tracking-tight leading-none m-0">INSIDE-IIM</h1>
-          <span className="text-[10px] text-blue-600 font-extrabold tracking-wider uppercase">Research Terminal</span>
+          <h1 className="text-lg font-extrabold text-slate-850 tracking-wider leading-none m-0 font-mono">INSIDE_IIM</h1>
+          <span className="text-[9px] text-blue-650 font-extrabold tracking-widest uppercase font-mono">INTEL.RESEARCH</span>
         </div>
       </div>
 
@@ -23,36 +22,36 @@ export default function Navbar({ activePage, setActivePage }) {
       <div className="flex items-center space-x-2">
         <button
           onClick={() => setActivePage('home')}
-          className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${
+          className={`flex items-center space-x-2 px-4 py-2 rounded text-xs font-mono tracking-wider transition-all cursor-pointer ${
             activePage === 'home'
-              ? 'bg-blue-50 text-blue-600 border border-blue-200'
-              : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+              ? 'bg-slate-900/10 text-slate-800 border border-slate-900/20'
+              : 'text-slate-600 hover:text-slate-950 hover:bg-white/30'
           }`}
         >
-          <LineChart className="w-4 h-4" />
-          <span>New Analysis</span>
+          <LineChart className="w-3.5 h-3.5" />
+          <span>NEW_ANALYSIS</span>
         </button>
 
         <button
           onClick={() => setActivePage('history')}
-          className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${
+          className={`flex items-center space-x-2 px-4 py-2 rounded text-xs font-mono tracking-wider transition-all cursor-pointer ${
             activePage === 'history'
-              ? 'bg-blue-50 text-blue-600 border border-blue-200'
-              : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+              ? 'bg-slate-900/10 text-slate-800 border border-slate-900/20'
+              : 'text-slate-600 hover:text-slate-950 hover:bg-white/30'
           }`}
         >
-          <History className="w-4 h-4" />
-          <span>Research History</span>
+          <History className="w-3.5 h-3.5" />
+          <span>RESEARCH_HISTORY</span>
         </button>
       </div>
 
       {/* User Status / Quick Info */}
       <div className="flex items-center space-x-3">
         <div className="text-right hidden sm:block">
-          <div className="text-[10px] text-slate-400 font-semibold uppercase">Authenticated as</div>
-          <div className="text-sm font-bold text-slate-700">analyst@insideiim.com</div>
+          <div className="text-[8px] text-slate-500 font-bold uppercase tracking-widest font-mono">STATUS: CONNECTED</div>
+          <div className="text-xs font-bold text-slate-700 font-mono">analyst@insideiim.com</div>
         </div>
-        <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white font-extrabold text-sm shadow-md shadow-blue-600/20">
+        <div className="w-7 h-7 rounded bg-slate-900/10 border border-slate-900/20 flex items-center justify-center text-slate-700 font-bold text-xs font-mono">
           A
         </div>
       </div>

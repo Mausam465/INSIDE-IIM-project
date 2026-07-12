@@ -169,12 +169,15 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-[#f8fafc] text-[#0f172a] flex flex-col relative">
+    <div className="min-h-screen bg-transparent text-slate-900 flex flex-col relative overflow-x-hidden">
+      {/* Decorative Blueprint/Metallic Grid Overlay */}
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,#64748b_1px,transparent_1px),linear-gradient(to_bottom,#64748b_1px,transparent_1px)] bg-[size:4rem_4rem] opacity-[0.04] pointer-events-none z-0" />
+
       {/* Navigation Header */}
       <Navbar activePage={activePage} setActivePage={setActivePage} />
 
       {/* Main Terminal Window Router */}
-      <main className="flex-grow">
+      <main className="flex-grow z-10 relative">
         {activePage === 'home' && (
           <Home onSearch={handleStartAnalysis} />
         )}
@@ -202,30 +205,35 @@ export default function App() {
 
       {/* Custom Modal Notification Box */}
       {modalError && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
-          <div className="bg-white border border-slate-200 rounded-2xl p-6 max-w-md w-full shadow-2xl text-center space-y-4">
-            <div className="w-12 h-12 rounded-full bg-red-50 flex items-center justify-center mx-auto text-red-500 shadow-sm border border-red-100">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
+          <div className="bg-white/95 backdrop-blur-md border border-slate-200 rounded-xl p-6 max-w-md w-full shadow-2xl text-center space-y-4 relative">
+            <span className="absolute top-2 left-2 text-slate-400/20 text-xs font-mono font-bold select-none">+</span>
+            <span className="absolute top-2 right-2 text-slate-400/20 text-xs font-mono font-bold select-none">+</span>
+            <span className="absolute bottom-2 left-2 text-slate-400/20 text-xs font-mono font-bold select-none">+</span>
+            <span className="absolute bottom-2 right-2 text-slate-400/20 text-xs font-mono font-bold select-none">+</span>
+
+            <div className="w-12 h-12 rounded-full bg-red-50 flex items-center justify-center mx-auto text-red-500 border border-red-100 shadow-sm">
               <AlertCircle className="w-6 h-6" />
             </div>
             <div>
-              <h3 className="text-lg font-extrabold text-slate-800">Terminal Validation Error</h3>
+              <h3 className="text-lg font-bold text-slate-800 uppercase tracking-wider font-mono">Terminal Warning</h3>
               <p className="text-xs text-slate-500 mt-2 leading-relaxed">
                 {modalError}
               </p>
             </div>
             <button
               onClick={() => setModalError(null)}
-              className="w-full bg-[#0f172a] hover:bg-blue-600 text-white font-bold py-2.5 px-4 rounded-xl transition-all cursor-pointer text-sm shadow-sm"
+              className="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-2.5 px-4 rounded-lg transition-all cursor-pointer text-xs font-mono tracking-wider"
             >
-              Dismiss Alert
+              DISMISS // ACKNOWLEDGE
             </button>
           </div>
         </div>
       )}
 
       {/* Footer Branding */}
-      <footer className="border-t border-slate-200 py-6 text-center text-xs text-slate-500 bg-white shadow-inner">
-        &copy; {new Date().getFullYear()} INSIDE-IIM. Institutional Grade Investment Intelligence.
+      <footer className="border-t border-slate-300/40 py-6 text-center text-[10px] text-slate-500 bg-white/35 backdrop-blur-sm font-mono select-none tracking-widest">
+        METALLIC_SYS // GMT+5:30 SLATE // INSIDE-IIM INTEL.
       </footer>
     </div>
   );
