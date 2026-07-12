@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { AlertCircle } from 'lucide-react';
 import Navbar from './components/Navbar';
 import Home from './pages/Home';
 import Loading from './pages/Loading';
@@ -14,6 +15,7 @@ export default function App() {
   const [tickerToAnalyze, setTickerToAnalyze] = useState('');
   const [activeQuery, setActiveQuery] = useState('');
   const [token, setToken] = useState(localStorage.getItem('token') || '');
+  const [modalError, setModalError] = useState(null);
 
   // Helper to clear token on authentication failure
   const handleAuthError = () => {
@@ -96,14 +98,14 @@ export default function App() {
 
         if (res.status === 401) {
           handleAuthError();
-          alert('Session expired. Please search again.');
+          setModalError('Session expired. Please start your search again.');
           setActivePage('home');
           return;
         }
 
         if (!res.ok) {
           const errorData = await res.json();
-          alert(errorData.message || 'Failed to generate report.');
+          setModalError(errorData.message || 'Failed to generate report.');
           setActivePage('home');
           return;
         }
@@ -118,7 +120,7 @@ export default function App() {
       }
     } catch (err) {
       console.warn('Network error while posting report. Using fallback mock.', err.message);
-      alert('Network error connecting to the backend. Please ensure the server is active.');
+      setModalError('Network error connecting to the backend. Please ensure the server is active.');
       setActivePage('home');
       return;
     }
@@ -167,7 +169,7 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-[#f8fafc] text-[#0f172a] flex flex-col">
+    <div className="min-h-screen bg-[#f8fafc] text-[#0f172a] flex flex-col relative">
       {/* Navigation Header */}
       <Navbar activePage={activePage} setActivePage={setActivePage} />
 
@@ -197,6 +199,29 @@ export default function App() {
           />
         )}
       </main>
+
+      {/* Custom Modal Notification Box */}
+      {modalError && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+          <div className="bg-white border border-slate-200 rounded-2xl p-6 max-w-md w-full shadow-2xl text-center space-y-4">
+            <div className="w-12 h-12 rounded-full bg-red-50 flex items-center justify-center mx-auto text-red-500 shadow-sm border border-red-100">
+              <AlertCircle className="w-6 h-6" />
+            </div>
+            <div>
+              <h3 className="text-lg font-extrabold text-slate-800">Terminal Validation Error</h3>
+              <p className="text-xs text-slate-500 mt-2 leading-relaxed">
+                {modalError}
+              </p>
+            </div>
+            <button
+              onClick={() => setModalError(null)}
+              className="w-full bg-[#0f172a] hover:bg-blue-600 text-white font-bold py-2.5 px-4 rounded-xl transition-all cursor-pointer text-sm shadow-sm"
+            >
+              Dismiss Alert
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Footer Branding */}
       <footer className="border-t border-slate-200 py-6 text-center text-xs text-slate-500 bg-white shadow-inner">
