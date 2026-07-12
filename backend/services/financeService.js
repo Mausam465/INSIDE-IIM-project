@@ -54,9 +54,13 @@ const parseFinancialsWithRegex = (ticker, text) => {
     for (const keyword of keywords) {
       const index = textLower.indexOf(keyword.toLowerCase());
       if (index !== -1) {
-        const slice = text.substring(index, index + 150);
-        // Find float decimal numbers
-        const matches = slice.match(/\$?\s*([\d\.,]+)\s*(trillion|billion|million|t|b|m)?/i);
+        // Take a window before and after the keyword to capture contexts like: "$94.6B Market Cap" or "Market Cap: $94.6B"
+        const slice = text.substring(Math.max(0, index - 30), Math.min(text.length, index + 150));
+        
+        // Match numbers optionally followed by scale units (T/B/M) with word boundaries to avoid matching adjacent words
+        const matches = slice.match(/\$?\s*([\d\.,]+)\s*\b(trillion|billion|million|t|b|m)\b/i) || 
+                        slice.match(/\$?\s*([\d\.,]+)/i);
+                        
         if (matches) {
           let val = parseFloat(matches[1].replace(/,/g, ''));
           if (isNaN(val)) continue;
@@ -70,7 +74,7 @@ const parseFinancialsWithRegex = (ticker, text) => {
           else if (suffix.startsWith('b')) multiplier = 1e9;
           else if (suffix.startsWith('m')) multiplier = 1e6;
 
-          // If looking for market cap or revenue, and no suffix was matched but value is small, scale it to billions
+          // If no suffix but value is small for marketCap/revenue, scale to billions/trillions
           if (isMultiplier && multiplier === 1 && val > 0 && val < 999) {
             multiplier = val < 8 ? 1e12 : 1e9; 
           }
