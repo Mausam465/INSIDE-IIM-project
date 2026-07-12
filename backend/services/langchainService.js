@@ -24,15 +24,15 @@ const getGeminiModel = () => {
 };
 
 /**
- * Executes a LangChain RunnableSequence to synthesize stock research as structured JSON.
- * Falls back to local template generator if API key is missing or fails.
+ * Executes a LangChain RunnableSequence to synthesize stock research.
+ * Outputs a structured JSON payload conforming to database model expectations.
  * 
  * @param {string} ticker - Stock symbol
  * @param {Object} profile - Company profile summary
  * @param {Object} metrics - Financial statistics
  * @param {Array} news - Recent stock news articles
  * @param {string} query - Specific focus questions
- * @returns {Promise<Object>} - The parsed JSON containing investmentDecision, confidenceScore, and reportMarkdown
+ * @returns {Promise<Object>} - The parsed JSON containing recommendation, confidenceScore, aiSummary, risks, and opportunities
  */
 export const runInvestmentSequence = async (ticker, profile, metrics, news, query) => {
   const symbol = ticker.toUpperCase().trim();
@@ -43,7 +43,7 @@ export const runInvestmentSequence = async (ticker, profile, metrics, news, quer
     return compileLocalSequenceReport(symbol, profile, metrics, news, query);
   }
 
-  // Create PromptTemplate requesting JSON payload
+  // Create PromptTemplate requesting JSON payload with required Mongoose schema keys
   const promptTemplate = PromptTemplate.fromTemplate(`
 You are an institutional financial analyst. Write a professional investment research report on {ticker} responding to: "{query}".
 
@@ -54,13 +54,15 @@ Recent News Articles: {news}
 
 Your response MUST be a valid JSON object matching this schema:
 {{
-  "investmentDecision": "STRONG_BUY" | "BUY" | "HOLD" | "SELL" | "STRONG_SELL",
+  "recommendation": "INVEST" | "PASS" | "STRONG_BUY" | "BUY" | "HOLD" | "SELL" | "STRONG_SELL",
   "confidenceScore": 0-100,
-  "reportMarkdown": "Complete markdown report text"
+  "aiSummary": "Complete detailed markdown summary report text.",
+  "risks": ["Risk point 1", "Risk point 2", "Risk point 3"],
+  "opportunities": ["Opportunity point 1", "Opportunity point 2", "Opportunity point 3"]
 }}
 
-Formatting guidelines for "reportMarkdown":
-- Include sections for: Executive Summary, Financial Metrics Analysis, News Sentiment Synthesis, Risks & Headwinds, and Final Verdict.
+Formatting guidelines for "aiSummary":
+- Include sections for: Executive Summary, Financial Metrics Analysis, News Sentiment Synthesis, and Final Verdict.
 - Make the tone objective, analytical, and professional.
 `);
 
@@ -82,9 +84,11 @@ Formatting guidelines for "reportMarkdown":
     const parsed = JSON.parse(outputText);
 
     return {
-      investmentDecision: parsed.investmentDecision || 'HOLD',
+      recommendation: parsed.recommendation || 'HOLD',
       confidenceScore: parsed.confidenceScore || 70,
-      reportMarkdown: parsed.reportMarkdown || `# Stock Analysis: ${symbol}\nFailed to compile text.`
+      aiSummary: parsed.aiSummary || `# Stock Analysis: ${symbol}\nFailed to compile text.`,
+      risks: Array.isArray(parsed.risks) ? parsed.risks : ['Market price fluctuations.'],
+      opportunities: Array.isArray(parsed.opportunities) ? parsed.opportunities : ['Expanding business sectors.']
     };
 
   } catch (error) {
@@ -116,18 +120,19 @@ This report analyzes **${ticker}** to resolve: *"${query}"*.
 
 ## News Sentiment Synthesis
 - Analyzed ${news.length} news articles. Headlines suggest active market movements and corporate interest.
-
-## Core Risks & Headwinds
-- High interest rate environments present financing headwinds.
-- Changing market dynamics could impact operational profit margins.
-
-## Final Verdict
-The asset indicates steady fundamentals. Recommended: **NEUTRAL / HOLD** pending further live news confirmation.
 `;
 
   return {
-    investmentDecision: decision,
+    recommendation: decision,
     confidenceScore: confidence,
-    reportMarkdown: md
+    aiSummary: md,
+    risks: [
+      'High interest rate environments present financing headwinds.',
+      'Changing market dynamics could impact operational profit margins.'
+    ],
+    opportunities: [
+      'Digital cloud integration trends provide TAM expansion.',
+      'Potential efficiency improvements based on cash flow allocations.'
+    ]
   };
 };

@@ -1,26 +1,5 @@
 import mongoose from 'mongoose';
 
-const newsArticleSchema = new mongoose.Schema({
-  headline: {
-    type: String,
-    required: true,
-    trim: true
-  },
-  source: {
-    type: String,
-    required: true
-  },
-  url: {
-    type: String,
-    required: true
-  },
-  sentiment: {
-    type: String,
-    enum: ['POSITIVE', 'NEGATIVE', 'NEUTRAL'],
-    required: true
-  }
-}, { _id: false });
-
 const reportSchema = new mongoose.Schema({
   userId: {
     type: mongoose.Schema.Types.ObjectId,
@@ -46,14 +25,28 @@ const reportSchema = new mongoose.Schema({
     netIncome: { type: Number },
     freeCashFlow: { type: Number }
   },
-  news: [newsArticleSchema],
-  aiAnalysis: {
+  latestNews: [
+    {
+      headline: { type: String, required: true },
+      source: { type: String, required: true },
+      url: { type: String, required: true }
+    }
+  ],
+  aiSummary: {
     type: String,
     required: true
   },
-  investmentDecision: {
+  risks: {
+    type: [String],
+    default: []
+  },
+  opportunities: {
+    type: [String],
+    default: []
+  },
+  recommendation: {
     type: String,
-    enum: ['STRONG_BUY', 'BUY', 'HOLD', 'SELL', 'STRONG_SELL'],
+    enum: ['STRONG_BUY', 'BUY', 'HOLD', 'SELL', 'STRONG_SELL', 'INVEST', 'PASS'],
     required: true,
     default: 'HOLD'
   },
@@ -63,7 +56,7 @@ const reportSchema = new mongoose.Schema({
     min: 0,
     max: 100
   },
-  searchDate: {
+  createdDate: {
     type: Date,
     default: Date.now,
     required: true
@@ -72,11 +65,10 @@ const reportSchema = new mongoose.Schema({
   timestamps: true
 });
 
-// Indexes for query optimization
+// Optimization Indexes
 reportSchema.index({ userId: 1 });
 reportSchema.index({ ticker: 1 });
-reportSchema.index({ searchDate: -1 });
-reportSchema.index({ userId: 1, ticker: 1 }); // Compound index for filtering user watchlists
+reportSchema.index({ createdDate: -1 });
 
 const Report = mongoose.model('Report', reportSchema);
 
