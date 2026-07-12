@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Download, MessageSquare, Sparkles, Send, Trash2, Globe, Building2, User, MapPin, Users, TrendingUp, Landmark, ShieldCheck } from 'lucide-react';
+import { Download, MessageSquare, Sparkles, Send, Trash2, Globe, Building2, User, MapPin, Users, TrendingUp, Landmark, ShieldCheck, AlertOctagon, HelpCircle, ArrowUpRight } from 'lucide-react';
+import { RevenueTrendChart, IncomeComparisonChart } from '../components/FinancialCharts';
 
 /**
  * AnalysisReport Component
@@ -60,7 +61,6 @@ export default function AnalysisReport({ report, onBack, onDelete }) {
   // Helper: Format percentage metrics
   const formatPercent = (val) => {
     if (val === null || val === undefined || isNaN(val)) return 'N/A';
-    // If the value is fractional (e.g. 0.15), convert to percentage
     const parsed = val > 0 && val < 1.0 ? val * 100 : val;
     return `${parsed.toFixed(2)}%`;
   };
@@ -86,6 +86,32 @@ export default function AnalysisReport({ report, onBack, onDelete }) {
     }
   };
 
+  // Helper: Format relative time or news dates
+  const formatNewsTime = (dateInput) => {
+    try {
+      const d = new Date(dateInput);
+      if (isNaN(d.getTime())) return 'Recently';
+      
+      const diffMs = Date.now() - d.getTime();
+      const diffHrs = Math.floor(diffMs / 3600000);
+      
+      if (diffHrs < 1) return 'Just now';
+      if (diffHrs < 24) return `${diffHrs} hours ago`;
+      if (diffHrs < 48) return 'Yesterday';
+      
+      return d.toLocaleDateString('en-US', { day: 'numeric', month: 'short' });
+    } catch {
+      return 'Recently';
+    }
+  };
+
+  const getSentimentBadge = (sentiment) => {
+    const s = (sentiment || 'NEUTRAL').toUpperCase();
+    if (s === 'POSITIVE') return 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20';
+    if (s === 'NEGATIVE') return 'bg-red-500/10 text-red-400 border border-red-500/20';
+    return 'bg-slate-500/10 text-slate-400 border border-slate-500/20';
+  };
+
   // Get logo domain name based on company name
   const getDomainFromCompanyName = (name) => {
     const cleanName = name
@@ -108,7 +134,6 @@ export default function AnalysisReport({ report, onBack, onDelete }) {
             &larr; Back to Dashboard
           </button>
           <div className="flex items-center space-x-4">
-            {/* Clearbit Favicon Logo Container */}
             {!logoError ? (
               <img
                 src={logoUrl}
@@ -163,15 +188,24 @@ export default function AnalysisReport({ report, onBack, onDelete }) {
             {/* AI Decision */}
             <div className="bg-[#1e293b]/20 border border-[#334155]/40 rounded-xl p-5 text-center flex flex-col justify-center items-center">
               <span className="text-xs text-slate-400 uppercase font-semibold">AI Decision Verdict</span>
-              <div className={`mt-2 py-1 px-4 rounded-full text-sm font-black tracking-wider text-center inline-block ${getDecisionColor(report.recommendation)}`}>
+              <div className={`mt-2 py-1.5 px-6 rounded-full text-base font-black tracking-wider text-center inline-block ${getDecisionColor(report.recommendation)}`}>
                 {(report.recommendation || 'PASS').replace('_', ' ')}
               </div>
             </div>
 
-            {/* Confidence Score */}
-            <div className="bg-[#1e293b]/20 border border-[#334155]/40 rounded-xl p-5 text-center flex flex-col justify-center items-center">
-              <span className="text-xs text-slate-400 uppercase font-semibold">Confidence Rating</span>
-              <div className="text-2xl font-black text-blue-400 mt-1">{report.confidenceScore}%</div>
+            {/* Confidence Score Progress Bar (GLOWING PROGRESS BAR) */}
+            <div className="bg-[#1e293b]/20 border border-[#334155]/40 rounded-xl p-5 flex flex-col justify-center">
+              <div className="flex justify-between items-center text-xs text-slate-400 uppercase font-semibold">
+                <span>Confidence Rating</span>
+                <span className="text-blue-400 font-bold text-sm">{report.confidenceScore}%</span>
+              </div>
+              {/* Progress track */}
+              <div className="w-full bg-[#0b0f19] rounded-full h-2 mt-3 overflow-hidden border border-[#334155]/20 relative">
+                <div
+                  className="bg-gradient-to-r from-blue-500 to-indigo-500 h-full rounded-full transition-all duration-500"
+                  style={{ width: `${report.confidenceScore}%` }}
+                ></div>
+              </div>
             </div>
 
             {/* Data Sources Count */}
@@ -181,7 +215,7 @@ export default function AnalysisReport({ report, onBack, onDelete }) {
             </div>
           </div>
 
-          {/* Company Overview Section (BIGGEST MISSING FEATURE) */}
+          {/* Company Overview Section */}
           <div className="bg-[#1e293b]/10 border border-[#334155]/30 rounded-2xl p-6 shadow-lg">
             <h3 className="font-bold text-base text-slate-200 border-b border-[#334155]/20 pb-2 mb-4 flex items-center space-x-2">
               <Building2 className="w-4.5 h-4.5 text-blue-500" />
@@ -224,7 +258,74 @@ export default function AnalysisReport({ report, onBack, onDelete }) {
             </p>
           </div>
 
-          {/* Financial Scorecard Grid (INCORPORATING MISSING METRICS) */}
+          {/* AI Explanation / Core Catalysts & Risks */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Why Invest? Card */}
+            <div className="bg-[#0f1d1a]/30 border border-[#10b981]/25 rounded-2xl p-5 shadow-lg shadow-emerald-950/5">
+              <h3 className="font-extrabold text-sm text-emerald-400 uppercase tracking-wider mb-4 flex items-center space-x-2">
+                <ShieldCheck className="w-5 h-5 text-emerald-400" />
+                <span>Why Invest? (Catalysts)</span>
+              </h3>
+              <ul className="space-y-3">
+                {(report.opportunities || []).length > 0 ? (
+                  report.opportunities.map((item, i) => (
+                    <li key={i} className="text-xs text-slate-300 flex items-start space-x-2.5">
+                      <span className="text-emerald-400 font-bold select-none mt-0.5">&bull;</span>
+                      <span>{item}</span>
+                    </li>
+                  ))
+                ) : (
+                  <>
+                    <li className="text-xs text-slate-300 flex items-start space-x-2.5">
+                      <span className="text-emerald-400 font-bold mt-0.5">&bull;</span>
+                      <span>Competitive market share advantages inside sector groups.</span>
+                    </li>
+                    <li className="text-xs text-slate-300 flex items-start space-x-2.5">
+                      <span className="text-emerald-400 font-bold mt-0.5">&bull;</span>
+                      <span>Strengthening operational margins from buyback triggers.</span>
+                    </li>
+                  </>
+                )}
+              </ul>
+            </div>
+
+            {/* Potential Risks Card */}
+            <div className="bg-[#1f1115]/30 border border-[#ef4444]/25 rounded-2xl p-5 shadow-lg shadow-red-950/5">
+              <h3 className="font-extrabold text-sm text-red-400 uppercase tracking-wider mb-4 flex items-center space-x-2">
+                <AlertOctagon className="w-5 h-5 text-red-400" />
+                <span>Potential Risks & Headwinds</span>
+              </h3>
+              <ul className="space-y-3">
+                {(report.risks || []).length > 0 ? (
+                  report.risks.map((item, i) => (
+                    <li key={i} className="text-xs text-slate-300 flex items-start space-x-2.5">
+                      <span className="text-red-400 font-bold select-none mt-0.5">&bull;</span>
+                      <span>{item}</span>
+                    </li>
+                  ))
+                ) : (
+                  <>
+                    <li className="text-xs text-slate-300 flex items-start space-x-2.5">
+                      <span className="text-red-400 font-bold mt-0.5">&bull;</span>
+                      <span>Competitive margin pressures and cost shifts.</span>
+                    </li>
+                    <li className="text-xs text-slate-300 flex items-start space-x-2.5">
+                      <span className="text-red-400 font-bold mt-0.5">&bull;</span>
+                      <span>Macro headwinds under persistent interest rate pressures.</span>
+                    </li>
+                  </>
+                )}
+              </ul>
+            </div>
+          </div>
+
+          {/* SVG Charts Row (REVENUE AND NET INCOME CHARTS) */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <RevenueTrendChart baseRevenue={report.financialData?.revenue} ticker={report.ticker} />
+            <IncomeComparisonChart baseIncome={report.financialData?.netIncome} />
+          </div>
+
+          {/* Financial Scorecard Grid */}
           <div>
             <h4 className="text-sm font-semibold text-slate-300 uppercase tracking-wider mb-4 flex items-center space-x-2">
               <TrendingUp className="w-4 h-4 text-emerald-500" />
@@ -333,27 +434,36 @@ export default function AnalysisReport({ report, onBack, onDelete }) {
             </form>
           </div>
 
-          {/* Aggregated News List */}
+          {/* Aggregated Clickable News List (LIVE CARD DESIGNS) */}
           <div>
             <h4 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">Aggregated News Context</h4>
             <div className="space-y-3">
               {(report.latestNews || report.news || []).map((item, idx) => (
-                <div key={idx} className="bg-[#0b0f19] border border-[#1e293b] p-4 rounded-xl text-xs space-y-2">
+                <a
+                  key={idx}
+                  href={item.url && item.url !== '#' ? item.url : undefined}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={`block bg-[#0b0f19] hover:bg-[#1e293b]/30 border border-[#1e293b] hover:border-[#334155]/60 p-4 rounded-xl text-xs space-y-2 transition-all group ${
+                    item.url && item.url !== '#' ? 'cursor-pointer' : 'cursor-default'
+                  }`}
+                >
                   <div className="flex items-center justify-between">
-                    <span className="text-[10px] text-slate-500 font-medium">{item.source}</span>
+                    <span className="text-[10px] text-blue-400 font-mono font-bold uppercase tracking-wider">{item.source}</span>
+                    <span className={`text-[9px] px-2 py-0.2 rounded font-bold uppercase tracking-wide ${getSentimentBadge(item.sentiment)}`}>
+                      {item.sentiment || 'NEUTRAL'}
+                    </span>
                   </div>
-                  <h5 className="font-semibold text-slate-200 line-clamp-2">{item.headline}</h5>
-                  {item.url && item.url !== '#' && (
-                    <a
-                      href={item.url}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="text-blue-400 hover:underline block text-[10px]"
-                    >
-                      Read article &rarr;
-                    </a>
-                  )}
-                </div>
+                  <h5 className="font-semibold text-slate-200 line-clamp-2 group-hover:text-white flex items-start justify-between">
+                    <span>{item.headline}</span>
+                    {item.url && item.url !== '#' && (
+                      <ArrowUpRight className="w-3.5 h-3.5 text-slate-500 group-hover:text-blue-400 ml-1.5 flex-shrink-0 transition-colors" />
+                    )}
+                  </h5>
+                  <div className="text-[9px] text-slate-500 font-medium">
+                    {formatNewsTime(item.publishedAt)}
+                  </div>
+                </a>
               ))}
             </div>
           </div>

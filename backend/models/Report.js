@@ -34,15 +34,17 @@ const reportSchema = new mongoose.Schema({
     netIncome: { type: Number },
     freeCashFlow: { type: Number },
     roe: { type: Number },              // Return on Equity
-    dividendYield: { type: Number },     // Dividend Yield (in percentage or fraction)
+    dividendYield: { type: Number },     // Dividend Yield
     currentRatio: { type: Number },      // Current Ratio
-    operatingMargin: { type: Number }    // Operating Margin (in percentage or fraction)
+    operatingMargin: { type: Number }    // Operating Margin
   },
   latestNews: [
     {
       headline: { type: String, required: true },
       source: { type: String, required: true },
-      url: { type: String, default: '#' }
+      url: { type: String, default: '#' },
+      sentiment: { type: String, default: 'NEUTRAL' },
+      publishedAt: { type: Date }
     }
   ],
   aiSummary: {

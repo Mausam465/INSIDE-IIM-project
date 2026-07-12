@@ -35,12 +35,25 @@ export const generateReport = async (req, res) => {
     // 2. Fetch Latest News
     const newsArticles = await fetchLatestNews(resolvedTicker);
 
-    // Map news format to DB report schema expected keys (headline, source, url)
-    const dbNews = newsArticles.map((article) => ({
-      headline: article.title,
-      source: article.source,
-      url: article.url || '#'
-    }));
+    // Map news format to DB report schema expected keys (headline, source, url, sentiment, publishedAt)
+    const dbNews = newsArticles.map((article) => {
+      let sentiment = 'NEUTRAL';
+      const titleLower = (article.title || '').toLowerCase();
+      if (titleLower.includes('surge') || titleLower.includes('growth') || titleLower.includes('gain') || titleLower.includes('rise') || titleLower.includes('dividend') || titleLower.includes('buyback') || titleLower.includes('up') || titleLower.includes('positive') || titleLower.includes('launch') || titleLower.includes('deal')) {
+        sentiment = 'POSITIVE';
+      } else if (titleLower.includes('fall') || titleLower.includes('drop') || titleLower.includes('decline') || titleLower.includes('loss') || titleLower.includes('risk') || titleLower.includes('down') || titleLower.includes('headwind') || titleLower.includes('warn') || titleLower.includes('probe')) {
+        sentiment = 'NEGATIVE';
+      }
+
+      return {
+        headline: article.title,
+        source: article.source,
+        url: article.url || '#',
+        sentiment: article.sentiment || sentiment,
+        publishedAt: article.publishedAt ? new Date(article.publishedAt) : new Date()
+      };
+    });
+
 
     // 3. Execute LangChain Synthesis Sequence
     const analysis = await runInvestmentSequence(
