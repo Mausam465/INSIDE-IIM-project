@@ -56,7 +56,7 @@ Recent News Articles: {news}
 
 Your response MUST be a valid JSON object matching this schema:
 {{
-  "recommendation": "INVEST" | "PASS" | "STRONG_BUY" | "BUY" | "HOLD" | "SELL" | "STRONG_SELL",
+  "recommendation": "INVEST" | "PASS",
   "confidenceScore": 0-100,
   "aiSummary": "Complete detailed markdown summary report text.",
   "risks": ["Risk point 1", "Risk point 2", "Risk point 3"],
@@ -64,7 +64,7 @@ Your response MUST be a valid JSON object matching this schema:
 }}
 
 Formatting guidelines for "aiSummary":
-- Include sections for: Executive Summary, Financial Metrics Analysis, News Sentiment Synthesis, and Final Verdict.
+- Include sections for: Executive Summary, Financial Metrics Analysis, News Sentiment Synthesis, and Final Verdict (Invest or Pass reasoning).
 - Make the tone objective, analytical, and professional.
 `);
 
@@ -85,7 +85,7 @@ Formatting guidelines for "aiSummary":
     const parsed = JSON.parse(outputText);
 
     return {
-      recommendation: parsed.recommendation || 'HOLD',
+      recommendation: parsed.recommendation === 'INVEST' ? 'INVEST' : 'PASS',
       confidenceScore: parsed.confidenceScore || 70,
       aiSummary: parsed.aiSummary || `# Stock Analysis: ${symbol}\nFailed to compile text.`,
       risks: Array.isArray(parsed.risks) ? parsed.risks : ['Market price fluctuations.'],
@@ -116,17 +116,14 @@ const compileLocalSequenceReport = (ticker, profile, metrics, news, query) => {
   const tickerSeed = ticker.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
   const confidenceScore = 75 + (tickerSeed % 16); // yields values between 75% and 90%
 
-  // 2. Calculate dynamic recommendation based on P/E ratio and ticker seed
-  let recommendation = 'HOLD';
+  // 2. Calculate dynamic recommendation strictly matching 'INVEST' or 'PASS'
+  let recommendation = 'PASS';
   if (pe && pe !== 'N/A') {
     const peNum = parseFloat(pe);
-    if (peNum < 18) recommendation = 'STRONG_BUY';
-    else if (peNum < 28) recommendation = 'BUY';
-    else if (peNum < 40) recommendation = 'HOLD';
-    else recommendation = 'SELL';
+    // Standard investment benchmark rule: P/E between 8 and 35 is generally positive valuation
+    recommendation = (peNum >= 8 && peNum <= 35) ? 'INVEST' : 'PASS';
   } else {
-    const recs = ['BUY', 'HOLD', 'SELL', 'BUY', 'HOLD'];
-    recommendation = recs[tickerSeed % recs.length];
+    recommendation = (tickerSeed % 2 === 0) ? 'INVEST' : 'PASS';
   }
 
   // 3. Dynamically compile news synthesis bullets
@@ -142,16 +139,12 @@ const compileLocalSequenceReport = (ticker, profile, metrics, news, query) => {
   const dynamicOpportunities = [];
 
   if (news && news.length > 0) {
-    // Attempt to extract risks and opportunities from crawled headlines
-    news.forEach((item, idx) => {
+    news.forEach((item) => {
       const headlineLower = item.title.toLowerCase();
-      
-      // Look for negative or risk-associated keywords
       if (headlineLower.includes('fall') || headlineLower.includes('drop') || headlineLower.includes('decline') || headlineLower.includes('risk') || headlineLower.includes('headwind') || headlineLower.includes('loss') || headlineLower.includes('curb') || headlineLower.includes('charge')) {
         dynamicRisks.push(`Potential headwind observed: "${item.title}" (via ${item.source})`);
       }
-      // Look for positive or opportunity-associated keywords
-      else if (headlineLower.includes('surge') || headlineLower.includes('growth') || headlineLower.includes('rise') || headlineLower.includes('expand') || headlineLower.includes('gain') || headlineLower.includes('dividend') || headlineLower.includes('buyback') || headlineLower.includes('benefit')) {
+      else if (headlineLower.includes('pub') || headlineLower.includes('surge') || headlineLower.includes('growth') || headlineLower.includes('rise') || headlineLower.includes('expand') || headlineLower.includes('gain') || headlineLower.includes('dividend') || headlineLower.includes('buyback') || headlineLower.includes('benefit')) {
         dynamicOpportunities.push(`Operational catalyst identified: "${item.title}" (via ${item.source})`);
       }
     });

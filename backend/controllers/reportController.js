@@ -2,6 +2,7 @@ import * as reportService from '../services/reportService.js';
 import { fetchFinancialData } from '../services/financeService.js';
 import { fetchLatestNews } from '../services/newsService.js';
 import { runInvestmentSequence } from '../services/langchainService.js';
+import { searchCompanyInMarket } from '../services/companyService.js';
 
 // @desc    Generate and save a report (AI Analysis Pipeline)
 // @route   POST /api/reports
@@ -14,22 +15,36 @@ export const generateReport = async (req, res) => {
       return res.status(400).json({ message: 'Ticker and query are required' });
     }
 
+    // 0. Validate stock ticker or company name using market intelligence quotes index
+    console.log(`Verifying market listing for input symbol/name: "${ticker}"...`);
+    const matches = await searchCompanyInMarket(ticker);
+    if (!matches || matches.length === 0) {
+      return res.status(400).json({
+        message: `Invalid company symbol or name "${ticker}". No listed market asset found. Please try a valid ticker (e.g. AAPL, TSLA, NVDA) or clear company name.`
+      });
+    }
+
+    // Resolve input to matching listed equity data
+    const resolvedTicker = matches[0].ticker;
+    const resolvedName = matches[0].companyName;
+    console.log(`Resolved "${ticker}" to listed asset: ${resolvedTicker} (${resolvedName})`);
+
     // 1. Fetch Financial Data
-    const financials = await fetchFinancialData(ticker);
+    const financials = await fetchFinancialData(resolvedTicker);
 
     // 2. Fetch Latest News
-    const newsArticles = await fetchLatestNews(ticker);
+    const newsArticles = await fetchLatestNews(resolvedTicker);
 
     // Map news format to DB report schema expected keys (headline, source, url)
     const dbNews = newsArticles.map((article) => ({
       headline: article.title,
       source: article.source,
-      url: article.url
+      url: article.url || '#'
     }));
 
     // 3. Execute LangChain Synthesis Sequence
     const analysis = await runInvestmentSequence(
-      ticker,
+      resolvedTicker,
       financials.profile,
       financials.metrics,
       newsArticles,
@@ -38,14 +53,14 @@ export const generateReport = async (req, res) => {
 
     // 4. Save structured dossier to MongoDB using reportService
     const reportData = {
-      ticker: ticker.toUpperCase().trim(),
-      companyName: financials.companyName,
+      ticker: resolvedTicker.toUpperCase().trim(),
+      companyName: resolvedName,
       financialData: financials.metrics,
       latestNews: dbNews,
       aiSummary: analysis.aiSummary,
       risks: analysis.risks,
       opportunities: analysis.opportunities,
-      recommendation: analysis.recommendation,
+      recommendation: analysis.recommendation, // strictly 'INVEST' or 'PASS'
       confidenceScore: analysis.confidenceScore
     };
 

@@ -96,7 +96,16 @@ export default function App() {
 
         if (res.status === 401) {
           handleAuthError();
-          throw new Error('Authentication expired');
+          alert('Session expired. Please search again.');
+          setActivePage('home');
+          return;
+        }
+
+        if (!res.ok) {
+          const errorData = await res.json();
+          alert(errorData.message || 'Failed to generate report.');
+          setActivePage('home');
+          return;
         }
 
         const newReport = await res.json();
@@ -109,12 +118,15 @@ export default function App() {
       }
     } catch (err) {
       console.warn('Network error while posting report. Using fallback mock.', err.message);
+      alert('Network error connecting to the backend. Please ensure the server is active.');
+      setActivePage('home');
+      return;
     }
 
-    // Fallback Mock report if backend is disconnected
+    // Fallback Mock report if backend is disconnected entirely
     const fallbackReport = {
       _id: `mock_${Date.now()}`,
-      ticker: tickerToAnalyze,
+      ticker: tickerToAnalyze.toUpperCase(),
       companyName: tickerToAnalyze === 'AAPL' ? 'Apple Inc.' : tickerToAnalyze === 'TSLA' ? 'Tesla Motors' : `${tickerToAnalyze} Corporation`,
       query: activeQuery,
       financialData: { peRatio: 30.2, marketCap: 180000000000, debtToEquity: 0.8 },
@@ -123,7 +135,7 @@ export default function App() {
         { headline: 'Supply chain headwinds signal Q4 concerns', source: 'Bloomberg', url: '#' }
       ],
       aiSummary: `# Analysis Report: ${tickerToAnalyze}\n\n*Note: Running in offline fallback mode.*\n\n### Overview\nThe asset is showing strong support lines around key levels...`,
-      recommendation: 'BUY',
+      recommendation: 'PASS',
       confidenceScore: 82,
       createdDate: new Date().toISOString()
     };
