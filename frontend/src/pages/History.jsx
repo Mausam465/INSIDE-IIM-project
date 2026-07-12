@@ -8,7 +8,17 @@ export default function History({ reports, onViewReport, onDeleteReport }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [logoErrors, setLogoErrors] = useState({});
 
-  const filteredReports = reports.filter(
+  const uniqueReports = [];
+  const seenTickers = new Set();
+  for (const r of reports) {
+    const ticker = (r.ticker || '').toUpperCase().trim();
+    if (ticker && !seenTickers.has(ticker)) {
+      seenTickers.add(ticker);
+      uniqueReports.push(r);
+    }
+  }
+
+  const filteredReports = uniqueReports.filter(
     (r) =>
       r.ticker.toLowerCase().includes(searchTerm.toLowerCase()) ||
       r.companyName.toLowerCase().includes(searchTerm.toLowerCase())

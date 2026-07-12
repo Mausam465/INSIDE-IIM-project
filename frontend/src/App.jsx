@@ -165,7 +165,8 @@ export default function App() {
     }
 
     setReports((prev) => prev.filter((r) => r._id !== reportId));
-    setActivePage('home');
+    setCurrentReport(null);
+    setActivePage('history');
   };
 
   return (

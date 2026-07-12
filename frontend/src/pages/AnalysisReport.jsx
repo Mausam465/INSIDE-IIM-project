@@ -161,7 +161,12 @@ export default function AnalysisReport({ report, onBack, onDelete }) {
             <span>Print / PDF</span>
           </button>
           <button
-            onClick={() => onDelete(report._id)}
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              onDelete(report._id);
+            }}
             className="flex items-center space-x-2 bg-red-50 hover:bg-red-100 text-red-650 border border-red-200 px-4 py-2.5 rounded-xl text-sm font-bold transition-colors cursor-pointer shadow-sm"
           >
             <Trash2 className="w-4 h-4" />
