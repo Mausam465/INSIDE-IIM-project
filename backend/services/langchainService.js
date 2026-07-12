@@ -13,7 +13,10 @@ const getGeminiModel = () => {
       model = new ChatGoogleGenerativeAI({
         apiKey: apiKey,
         modelName: 'gemini-1.5-flash',
-        temperature: 0.2
+        temperature: 0.2,
+        modelKwargs: {
+          responseMimeType: 'application/json'
+        }
       });
     }
   }
@@ -21,7 +24,7 @@ const getGeminiModel = () => {
 };
 
 /**
- * Executes a LangChain RunnableSequence to synthesize stock research.
+ * Executes a LangChain RunnableSequence to synthesize stock research as structured JSON.
  * Falls back to local template generator if API key is missing or fails.
  * 
  * @param {string} ticker - Stock symbol
@@ -29,7 +32,7 @@ const getGeminiModel = () => {
  * @param {Object} metrics - Financial statistics
  * @param {Array} news - Recent stock news articles
  * @param {string} query - Specific focus questions
- * @returns {Promise<string>} - The synthesized Markdown report output
+ * @returns {Promise<Object>} - The parsed JSON containing investmentDecision, confidenceScore, and reportMarkdown
  */
 export const runInvestmentSequence = async (ticker, profile, metrics, news, query) => {
   const symbol = ticker.toUpperCase().trim();
@@ -40,38 +43,35 @@ export const runInvestmentSequence = async (ticker, profile, metrics, news, quer
     return compileLocalSequenceReport(symbol, profile, metrics, news, query);
   }
 
-  // Create PromptTemplate representing structural layout
+  // Create PromptTemplate requesting JSON payload
   const promptTemplate = PromptTemplate.fromTemplate(`
-You are an institutional financial analyst. Write a professional investment research report on {ticker}.
-Address the following research objective: "{query}"
+You are an institutional financial analyst. Write a professional investment research report on {ticker} responding to: "{query}".
 
-Company Profile context:
-{profile}
+Here is the raw stock data collected:
+Company Profile: {profile}
+Key Financial Metrics: {metrics}
+Recent News Articles: {news}
 
-Key Financial Metrics:
-{metrics}
+Your response MUST be a valid JSON object matching this schema:
+{{
+  "investmentDecision": "STRONG_BUY" | "BUY" | "HOLD" | "SELL" | "STRONG_SELL",
+  "confidenceScore": 0-100,
+  "reportMarkdown": "Complete markdown report text"
+}}
 
-Aggregated News context:
-{news}
-
-Write a detailed analysis. Format your output strictly in Markdown with these headers:
-# Research Report: {ticker}
-## Executive Summary
-## Financial Ratios and Metrics Analysis
-## News Sentiment Synthesis
-## Core Risks & Headwinds
-## Final Verdict
+Formatting guidelines for "reportMarkdown":
+- Include sections for: Executive Summary, Financial Metrics Analysis, News Sentiment Synthesis, Risks & Headwinds, and Final Verdict.
+- Make the tone objective, analytical, and professional.
 `);
 
   try {
-    // Chain sequence via LCEL (LangChain Expression Language)
     const sequence = RunnableSequence.from([
       promptTemplate,
       llm,
       new StringOutputParser()
     ]);
 
-    const output = await sequence.invoke({
+    const outputText = await sequence.invoke({
       ticker: symbol,
       query: query,
       profile: JSON.stringify(profile, null, 2),
@@ -79,7 +79,13 @@ Write a detailed analysis. Format your output strictly in Markdown with these he
       news: JSON.stringify(news, null, 2)
     });
 
-    return output;
+    const parsed = JSON.parse(outputText);
+
+    return {
+      investmentDecision: parsed.investmentDecision || 'HOLD',
+      confidenceScore: parsed.confidenceScore || 70,
+      reportMarkdown: parsed.reportMarkdown || `# Stock Analysis: ${symbol}\nFailed to compile text.`
+    };
 
   } catch (error) {
     console.error(`LangChainSequence Error for ${symbol}: ${error.message}. Triggering fallback sequence.`);
@@ -91,15 +97,20 @@ Write a detailed analysis. Format your output strictly in Markdown with these he
  * Fallback sequence output compiler if the LLM fails.
  */
 const compileLocalSequenceReport = (ticker, profile, metrics, news, query) => {
-  return `# Research Report: ${ticker}
+  const pe = metrics.peRatio || 'N/A';
+  const cap = metrics.marketCap ? `$${(metrics.marketCap / 1e9).toFixed(1)}B` : 'N/A';
+  const decision = metrics.peRatio && metrics.peRatio < 25 ? 'BUY' : 'HOLD';
+  const confidence = 85;
+
+  const md = `# Research Report: ${ticker}
 Generated in offline fallback sequence mode.
 
 ## Executive Summary
 This report analyzes **${ticker}** to resolve: *"${query}"*.
 
 ## Financial Ratios and Metrics Analysis
-* **Market Capitalization**: $${metrics.marketCap ? (metrics.marketCap / 1e9).toFixed(1) + 'B' : 'N/A'}
-* **P/E Valuation Ratio**: ${metrics.peRatio || 'N/A'}
+* **Market Capitalization**: ${cap}
+* **P/E Valuation Ratio**: ${pe}
 * **EPS Growth**: ${metrics.eps || 'N/A'}
 * **Operational Revenue**: $${metrics.revenue ? (metrics.revenue / 1e9).toFixed(1) + 'B' : 'N/A'}
 
@@ -113,4 +124,10 @@ This report analyzes **${ticker}** to resolve: *"${query}"*.
 ## Final Verdict
 The asset indicates steady fundamentals. Recommended: **NEUTRAL / HOLD** pending further live news confirmation.
 `;
+
+  return {
+    investmentDecision: decision,
+    confidenceScore: confidence,
+    reportMarkdown: md
+  };
 };

@@ -1,7 +1,10 @@
 import Report from '../models/Report.js';
+import { fetchFinancialData } from '../services/financeService.js';
+import { fetchLatestNews } from '../services/newsService.js';
+import { runInvestmentSequence } from '../services/langchainService.js';
 
-// @desc    Generate a report (mocked output for now)
-// @route   POST /api/reports/generate
+// @desc    Generate a report (AI Analysis Pipeline)
+// @route   POST /api/reports
 // @access  Private
 export const generateReport = async (req, res) => {
   const { ticker, query } = req.body;
@@ -11,54 +14,48 @@ export const generateReport = async (req, res) => {
       return res.status(400).json({ message: 'Ticker and query are required' });
     }
 
-    // Create a mock report for initial testing
-    const mockReportMarkdown = `# Investment Research Report: ${ticker.toUpperCase()}
-Generated on behalf of user: ${req.user.email}
+    // 1. Fetch Financial Data
+    const financials = await fetchFinancialData(ticker);
 
-## Executive Summary
-This is a synthesized mock investment analysis report for **${ticker.toUpperCase()}** responding to the request: *"${query}"*.
+    // 2. Fetch Latest News
+    const newsArticles = await fetchLatestNews(ticker);
 
-## Financial Metrics Analysis
-- Strong revenue trajectory
-- Healthy balance sheet indicators
+    // Map news format to DB report schema expected keys (headline, source, url, sentiment)
+    const dbNews = newsArticles.map((article) => ({
+      headline: article.title,
+      source: article.source,
+      url: article.url,
+      sentiment: article.sentiment || 'NEUTRAL'
+    }));
 
-## Sentiment Summary
-- Overall positive market sentiment derived from recent analyst reports.
-`;
+    // 3. Execute LangChain Synthesis Sequence
+    const analysis = await runInvestmentSequence(
+      ticker,
+      financials.profile,
+      financials.metrics,
+      newsArticles,
+      query
+    );
 
+    // 4. Save structured dossier to MongoDB
     const report = await Report.create({
       userId: req.user._id,
-      ticker,
-      companyName: `${ticker.toUpperCase()} Corporation`,
-      query,
-      financialData: {
-        peRatio: 28.5,
-        marketCap: 2500000000000,
-        debtToEquity: 1.2,
-        revenue: 95000000000,
-        netIncome: 22000000000,
-        freeCashFlow: 15000000000
-      },
-      news: [
-        {
-          headline: `${ticker.toUpperCase()} announces Q3 earnings beating consensus projections.`,
-          source: 'MarketWire',
-          url: 'https://example.com/finance/news',
-          sentiment: 'POSITIVE'
-        }
-      ],
-      aiAnalysis: mockReportMarkdown,
-      investmentDecision: 'BUY',
-      confidenceScore: 85
+      ticker: ticker.toUpperCase().trim(),
+      companyName: financials.companyName,
+      query: query.trim(),
+      financialData: financials.metrics,
+      news: dbNews,
+      aiAnalysis: analysis.reportMarkdown,
+      investmentDecision: analysis.investmentDecision,
+      confidenceScore: analysis.confidenceScore
     });
-
 
     res.status(201).json(report);
   } catch (error) {
+    console.error(`Pipeline Error: ${error.stack}`);
     res.status(500).json({ message: error.message });
   }
 };
-
 // @desc    Get all reports for authenticated user
 // @route   GET /api/reports
 // @access  Private
