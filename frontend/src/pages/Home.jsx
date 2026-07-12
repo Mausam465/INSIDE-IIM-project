@@ -2,12 +2,7 @@ import React, { useState } from 'react';
 import { Search, Compass, AlertCircle } from 'lucide-react';
 
 /**
- * Home Component (Search & Trigger Terminal)
- * Renders the primary landing view for analysts to kick off a research generation pipeline.
- * 
- * React Concept: useState Hook
- * - Used to track the reactive inputs of the form locally (ticker, query, validation errors)
- *   before submitting the final values up to the parent application.
+ * Home Component (Search & Trigger Terminal) in Light Theme
  */
 export default function Home({ onSearch }) {
   const [ticker, setTicker] = useState('');
@@ -27,7 +22,6 @@ export default function Home({ onSearch }) {
       return;
     }
 
-    // Pass data up to App.jsx handler
     onSearch({ ticker: ticker.toUpperCase().trim(), query: query.trim() });
   };
 
@@ -48,19 +42,19 @@ export default function Home({ onSearch }) {
     <div className="max-w-4xl mx-auto px-4 py-12">
       {/* Intro Header */}
       <div className="text-center mb-10">
-        <h2 className="text-4xl font-extrabold text-white mb-3">AI Investment Research Assistant</h2>
-        <p className="text-slate-400 text-lg">
+        <h2 className="text-4xl font-extrabold text-[#0f172a] mb-3">AI Investment Research Assistant</h2>
+        <p className="text-slate-500 text-base max-w-xl mx-auto">
           Compile institutional-grade analysis reports leveraging Google Gemini, news pipelines, and real-time financial tools.
         </p>
       </div>
 
       {/* Main Form Card */}
-      <div className="bg-[#1e293b]/40 backdrop-blur-xl border border-[#334155]/60 rounded-2xl p-8 shadow-2xl mb-8">
+      <div className="bg-white border border-slate-200 rounded-2xl p-8 shadow-md mb-8">
         <form onSubmit={handleSubmit} className="space-y-6">
           
           {/* Ticker Input */}
           <div>
-            <label className="block text-sm font-semibold text-slate-300 mb-2 uppercase tracking-wide">
+            <label className="block text-xs font-bold text-slate-500 mb-2 uppercase tracking-wider">
               Company Ticker Symbol
             </label>
             <input
@@ -68,13 +62,13 @@ export default function Home({ onSearch }) {
               placeholder="e.g. AAPL, NVDA, TSLA"
               value={ticker}
               onChange={(e) => setTicker(e.target.value)}
-              className="w-full bg-[#0b0f19] border border-[#334155] rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all font-mono uppercase"
+              className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all font-mono uppercase text-sm"
             />
           </div>
 
           {/* Research Query Input */}
           <div>
-            <label className="block text-sm font-semibold text-slate-300 mb-2 uppercase tracking-wide">
+            <label className="block text-xs font-bold text-slate-500 mb-2 uppercase tracking-wider">
               Research Objective / Focus Query
             </label>
             <textarea
@@ -82,13 +76,13 @@ export default function Home({ onSearch }) {
               placeholder="Detail what specific aspects of the financial or operational state you would like the AI Agent to investigate..."
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              className="w-full bg-[#0b0f19] border border-[#334155] rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all resize-none"
+              className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all resize-none text-sm"
             />
           </div>
 
           {/* Validation Alert */}
           {error && (
-            <div className="bg-red-900/20 border border-red-500/30 text-red-400 px-4 py-3 rounded-xl flex items-center space-x-3 text-sm">
+            <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-xl flex items-center space-x-3 text-sm">
               <AlertCircle className="w-5 h-5 flex-shrink-0" />
               <span>{error}</span>
             </div>
@@ -97,7 +91,7 @@ export default function Home({ onSearch }) {
           {/* Submit Button */}
           <button
             type="submit"
-            className="w-full bg-blue-600 hover:bg-blue-500 text-white font-semibold py-3 px-6 rounded-xl flex items-center justify-center space-x-2 transition-all shadow-lg shadow-blue-500/20"
+            className="w-full bg-blue-600 hover:bg-blue-500 text-white font-semibold py-3 px-6 rounded-xl flex items-center justify-center space-x-2 transition-all shadow-md hover:shadow-lg shadow-blue-500/10 cursor-pointer text-sm"
           >
             <Search className="w-5 h-5" />
             <span>Generate Research Report</span>
@@ -108,25 +102,25 @@ export default function Home({ onSearch }) {
 
       {/* Suggested Shortcuts */}
       <div>
-        <div className="flex items-center space-x-2 text-slate-300 mb-4">
+        <div className="flex items-center space-x-2 text-slate-500 mb-4">
           <Compass className="w-4 h-4 text-blue-500" />
-          <span className="text-sm font-semibold uppercase tracking-wider">Suggested Templates</span>
+          <span className="text-xs font-bold uppercase tracking-wider">Suggested Templates</span>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {shortcuts.map((item, idx) => (
             <button
               key={idx}
               onClick={() => handleShortcutClick(item.ticker, item.query)}
-              className="bg-[#1e293b]/20 hover:bg-[#1e293b]/50 border border-[#334155]/40 text-left p-4 rounded-xl transition-all group flex flex-col justify-between"
+              className="bg-white hover:bg-slate-50 border border-slate-200 text-left p-4 rounded-xl transition-all group flex flex-col justify-between shadow-sm hover:shadow-md cursor-pointer"
             >
               <div>
-                <span className="inline-block bg-blue-600/10 text-blue-400 font-mono font-bold text-xs px-2 py-0.5 rounded mb-2 border border-blue-500/25">
+                <span className="inline-block bg-blue-50 text-blue-600 font-mono font-bold text-[10px] px-2 py-0.5 rounded mb-2 border border-blue-100">
                   {item.ticker}
                 </span>
-                <h4 className="text-slate-200 font-semibold group-hover:text-white transition-colors mb-1 text-sm">
+                <h4 className="text-slate-800 font-bold group-hover:text-blue-600 transition-colors mb-1 text-sm">
                   {item.label}
                 </h4>
-                <p className="text-xs text-slate-400 line-clamp-2">
+                <p className="text-xs text-slate-500 line-clamp-2">
                   {item.query}
                 </p>
               </div>

@@ -1,11 +1,9 @@
 import React, { useState } from 'react';
-import { Download, MessageSquare, Sparkles, Send, Trash2, Globe, Building2, User, MapPin, Users, TrendingUp, Landmark, ShieldCheck, AlertOctagon, HelpCircle, ArrowUpRight } from 'lucide-react';
+import { Download, MessageSquare, Sparkles, Send, Trash2, Globe, Building2, User, MapPin, Users, TrendingUp, Landmark, ShieldCheck, AlertOctagon, ArrowUpRight } from 'lucide-react';
 import { RevenueTrendChart, IncomeComparisonChart } from '../components/FinancialCharts';
 
 /**
- * AnalysisReport Component
- * Renders the full financial scorecard, aggregated news cards, synthesized markdown report,
- * and an interactive chat drawer to ask follow-up Q&A.
+ * AnalysisReport Component in Light Theme
  */
 export default function AnalysisReport({ report, onBack, onDelete }) {
   const [messages, setMessages] = useState([
@@ -22,7 +20,6 @@ export default function AnalysisReport({ report, onBack, onDelete }) {
     setMessages((prev) => [...prev, userMsg]);
     setInputValue('');
 
-    // Simulate AI response
     setTimeout(() => {
       const aiReply = {
         role: 'ai',
@@ -38,18 +35,17 @@ export default function AnalysisReport({ report, onBack, onDelete }) {
       case 'INVEST':
       case 'STRONG_BUY':
       case 'BUY':
-        return 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/25';
+        return 'bg-emerald-50 text-emerald-700 border border-emerald-200';
       case 'PASS':
       case 'SELL':
       case 'STRONG_SELL':
-        return 'bg-red-500/10 text-red-400 border border-red-500/25';
+        return 'bg-red-50 text-red-700 border border-red-200';
       case 'HOLD':
       default:
-        return 'bg-amber-500/10 text-amber-400 border border-amber-500/25';
+        return 'bg-amber-50 text-amber-700 border border-amber-200';
     }
   };
 
-  // Helper: Format large numbers to Billion/Trillion scales
   const formatValuation = (val) => {
     if (val === null || val === undefined || isNaN(val)) return 'N/A';
     if (val >= 1e12) return `$${(val / 1e12).toFixed(2)}T`;
@@ -58,20 +54,17 @@ export default function AnalysisReport({ report, onBack, onDelete }) {
     return `$${val.toLocaleString()}`;
   };
 
-  // Helper: Format percentage metrics
   const formatPercent = (val) => {
     if (val === null || val === undefined || isNaN(val)) return 'N/A';
     const parsed = val > 0 && val < 1.0 ? val * 100 : val;
     return `${parsed.toFixed(2)}%`;
   };
 
-  // Helper: Format decimals (P/E and D/E ratios)
   const formatDecimal = (val, precision = 2) => {
     if (val === null || val === undefined || isNaN(val)) return 'N/A';
     return parseFloat(val).toFixed(precision);
   };
 
-  // Helper: Format polished English date (e.g. July 12, 2026)
   const formatDatePolished = (dateInput) => {
     try {
       const d = new Date(dateInput);
@@ -86,7 +79,6 @@ export default function AnalysisReport({ report, onBack, onDelete }) {
     }
   };
 
-  // Helper: Format relative time or news dates
   const formatNewsTime = (dateInput) => {
     try {
       const d = new Date(dateInput);
@@ -107,12 +99,11 @@ export default function AnalysisReport({ report, onBack, onDelete }) {
 
   const getSentimentBadge = (sentiment) => {
     const s = (sentiment || 'NEUTRAL').toUpperCase();
-    if (s === 'POSITIVE') return 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20';
-    if (s === 'NEGATIVE') return 'bg-red-500/10 text-red-400 border border-red-500/20';
-    return 'bg-slate-500/10 text-slate-400 border border-slate-500/20';
+    if (s === 'POSITIVE') return 'bg-emerald-50 text-emerald-700 border border-emerald-200';
+    if (s === 'NEGATIVE') return 'bg-red-50 text-red-700 border border-red-200';
+    return 'bg-slate-100 text-slate-600 border border-slate-200';
   };
 
-  // Get logo domain name based on company name
   const getDomainFromCompanyName = (name) => {
     const cleanName = name
       .toLowerCase()
@@ -126,11 +117,11 @@ export default function AnalysisReport({ report, onBack, onDelete }) {
   const logoUrl = `https://logo.clearbit.com/${domain}`;
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-8">
+    <div className="max-w-6xl mx-auto px-4 py-8 text-[#0f172a]">
       {/* Header Info */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between border-b border-[#334155]/40 pb-6 mb-8">
+      <div className="flex flex-col md:flex-row md:items-center justify-between border-b border-slate-200 pb-6 mb-8">
         <div>
-          <button onClick={onBack} className="text-sm text-blue-400 hover:underline mb-2 block">
+          <button onClick={onBack} className="text-sm font-semibold text-blue-600 hover:underline mb-2 block cursor-pointer">
             &larr; Back to Dashboard
           </button>
           <div className="flex items-center space-x-4">
@@ -139,21 +130,21 @@ export default function AnalysisReport({ report, onBack, onDelete }) {
                 src={logoUrl}
                 alt={`${report.companyName} logo`}
                 onError={() => setLogoError(true)}
-                className="w-12 h-12 rounded-xl object-contain bg-[#1e293b] p-1.5 border border-[#334155]/50"
+                className="w-12 h-12 rounded-xl object-contain bg-white p-1 border border-slate-200"
               />
             ) : (
-              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center border border-blue-500/40 text-white font-extrabold text-lg shadow-md shadow-blue-500/10">
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center text-white font-extrabold text-lg shadow-md">
                 {report.ticker.substring(0, 2)}
               </div>
             )}
             <div>
               <div className="flex items-center space-x-2">
-                <h2 className="text-3xl font-extrabold text-white">{report.companyName}</h2>
-                <span className="bg-blue-600/15 text-blue-400 font-mono font-bold px-2 py-0.5 rounded border border-blue-500/30 text-sm">
+                <h2 className="text-3xl font-extrabold text-slate-800">{report.companyName}</h2>
+                <span className="bg-blue-50 text-blue-600 font-mono font-bold px-2 py-0.5 rounded border border-blue-100 text-sm">
                   {report.ticker}
                 </span>
               </div>
-              <p className="text-xs text-slate-400 mt-1">
+              <p className="text-xs text-slate-400 mt-1 font-semibold">
                 Research Generated: {formatDatePolished(report.createdDate || report.createdAt)}
               </p>
             </div>
@@ -164,14 +155,14 @@ export default function AnalysisReport({ report, onBack, onDelete }) {
         <div className="flex items-center space-x-3 mt-4 md:mt-0">
           <button
             onClick={() => window.print()}
-            className="flex items-center space-x-2 bg-[#1e293b] hover:bg-[#334155] text-slate-200 border border-[#334155] px-4 py-2 rounded-lg text-sm transition-colors"
+            className="flex items-center space-x-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 px-4 py-2 rounded-lg text-sm font-semibold transition-colors cursor-pointer shadow-sm"
           >
             <Download className="w-4 h-4" />
             <span>Print / PDF</span>
           </button>
           <button
             onClick={() => onDelete(report._id)}
-            className="flex items-center space-x-2 bg-red-950/20 hover:bg-red-950/50 text-red-400 border border-red-900/30 px-4 py-2 rounded-lg text-sm transition-colors"
+            className="flex items-center space-x-2 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 px-4 py-2 rounded-lg text-sm font-semibold transition-colors cursor-pointer shadow-sm"
           >
             <Trash2 className="w-4 h-4" />
             <span>Delete</span>
@@ -180,27 +171,26 @@ export default function AnalysisReport({ report, onBack, onDelete }) {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Main Columns: Overview, Scores, Metrics, & Report */}
+        {/* Main Columns */}
         <div className="lg:col-span-2 space-y-8">
           
           {/* Scoring Banner Grid */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {/* AI Decision */}
-            <div className="bg-[#1e293b]/20 border border-[#334155]/40 rounded-xl p-5 text-center flex flex-col justify-center items-center">
-              <span className="text-xs text-slate-400 uppercase font-semibold">AI Decision Verdict</span>
-              <div className={`mt-2 py-1.5 px-6 rounded-full text-base font-black tracking-wider text-center inline-block ${getDecisionColor(report.recommendation)}`}>
+            <div className="bg-white border border-slate-200 rounded-xl p-5 text-center flex flex-col justify-center items-center shadow-sm">
+              <span className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">AI Decision Verdict</span>
+              <div className={`mt-2 py-1.5 px-6 rounded-full text-sm font-black tracking-wider text-center inline-block ${getDecisionColor(report.recommendation)}`}>
                 {(report.recommendation || 'PASS').replace('_', ' ')}
               </div>
             </div>
 
-            {/* Confidence Score Progress Bar (GLOWING PROGRESS BAR) */}
-            <div className="bg-[#1e293b]/20 border border-[#334155]/40 rounded-xl p-5 flex flex-col justify-center">
-              <div className="flex justify-between items-center text-xs text-slate-400 uppercase font-semibold">
+            {/* Confidence Score Progress Bar */}
+            <div className="bg-white border border-slate-200 rounded-xl p-5 flex flex-col justify-center shadow-sm">
+              <div className="flex justify-between items-center text-[10px] text-slate-400 uppercase font-bold tracking-wider">
                 <span>Confidence Rating</span>
-                <span className="text-blue-400 font-bold text-sm">{report.confidenceScore}%</span>
+                <span className="text-blue-600 font-extrabold text-sm">{report.confidenceScore}%</span>
               </div>
-              {/* Progress track */}
-              <div className="w-full bg-[#0b0f19] rounded-full h-2 mt-3 overflow-hidden border border-[#334155]/20 relative">
+              <div className="w-full bg-slate-100 rounded-full h-2 mt-3 overflow-hidden border border-slate-200/50 relative">
                 <div
                   className="bg-gradient-to-r from-blue-500 to-indigo-500 h-full rounded-full transition-all duration-500"
                   style={{ width: `${report.confidenceScore}%` }}
@@ -209,51 +199,51 @@ export default function AnalysisReport({ report, onBack, onDelete }) {
             </div>
 
             {/* Data Sources Count */}
-            <div className="bg-[#1e293b]/20 border border-[#334155]/40 rounded-xl p-5 text-center flex flex-col justify-center items-center">
-              <span className="text-xs text-slate-400 uppercase font-semibold">Live News Sources</span>
-              <div className="text-2xl font-black text-emerald-400 mt-1">{(report.latestNews || report.news || []).length} Channels</div>
+            <div className="bg-white border border-slate-200 rounded-xl p-5 text-center flex flex-col justify-center items-center shadow-sm">
+              <span className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Live News Sources</span>
+              <div className="text-2xl font-black text-emerald-600 mt-1">{(report.latestNews || report.news || []).length} Channels</div>
             </div>
           </div>
 
           {/* Company Overview Section */}
-          <div className="bg-[#1e293b]/10 border border-[#334155]/30 rounded-2xl p-6 shadow-lg">
-            <h3 className="font-bold text-base text-slate-200 border-b border-[#334155]/20 pb-2 mb-4 flex items-center space-x-2">
-              <Building2 className="w-4.5 h-4.5 text-blue-500" />
+          <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
+            <h3 className="font-extrabold text-base text-slate-800 border-b border-slate-100 pb-2 mb-4 flex items-center space-x-2">
+              <Building2 className="w-4.5 h-4.5 text-blue-600" />
               <span>Company Overview Profile</span>
             </h3>
             
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-              <div className="bg-[#0b0f19]/50 border border-[#1e293b] p-3 rounded-xl flex items-center space-x-3">
-                <Globe className="w-5 h-5 text-indigo-400 flex-shrink-0" />
+              <div className="bg-slate-50 border border-slate-100 p-3 rounded-xl flex items-center space-x-3">
+                <Globe className="w-5 h-5 text-blue-500 flex-shrink-0" />
                 <div>
-                  <div className="text-[10px] text-slate-500 uppercase font-semibold">Industry</div>
-                  <div className="text-xs font-bold text-slate-300">{report.companyOverview?.industry || 'Technology'}</div>
+                  <div className="text-[9px] text-slate-400 uppercase font-bold">Industry</div>
+                  <div className="text-xs font-extrabold text-slate-700">{report.companyOverview?.industry || 'Technology'}</div>
                 </div>
               </div>
-              <div className="bg-[#0b0f19]/50 border border-[#1e293b] p-3 rounded-xl flex items-center space-x-3">
-                <User className="w-5 h-5 text-indigo-400 flex-shrink-0" />
+              <div className="bg-slate-50 border border-slate-100 p-3 rounded-xl flex items-center space-x-3">
+                <User className="w-5 h-5 text-blue-500 flex-shrink-0" />
                 <div>
-                  <div className="text-[10px] text-slate-500 uppercase font-semibold">CEO</div>
-                  <div className="text-xs font-bold text-slate-300">{report.companyOverview?.ceo || 'Executive'}</div>
+                  <div className="text-[9px] text-slate-400 uppercase font-bold">CEO</div>
+                  <div className="text-xs font-extrabold text-slate-700">{report.companyOverview?.ceo || 'Executive'}</div>
                 </div>
               </div>
-              <div className="bg-[#0b0f19]/50 border border-[#1e293b] p-3 rounded-xl flex items-center space-x-3">
-                <MapPin className="w-5 h-5 text-indigo-400 flex-shrink-0" />
+              <div className="bg-slate-50 border border-slate-100 p-3 rounded-xl flex items-center space-x-3">
+                <MapPin className="w-5 h-5 text-blue-500 flex-shrink-0" />
                 <div>
-                  <div className="text-[10px] text-slate-500 uppercase font-semibold">Headquarters</div>
-                  <div className="text-xs font-bold text-slate-300 truncate max-w-[100px]" title={report.companyOverview?.headquarters}>{report.companyOverview?.headquarters || 'Global HQ'}</div>
+                  <div className="text-[9px] text-slate-400 uppercase font-bold">Headquarters</div>
+                  <div className="text-xs font-extrabold text-slate-700 truncate max-w-[100px]" title={report.companyOverview?.headquarters}>{report.companyOverview?.headquarters || 'Global HQ'}</div>
                 </div>
               </div>
-              <div className="bg-[#0b0f19]/50 border border-[#1e293b] p-3 rounded-xl flex items-center space-x-3">
-                <Users className="w-5 h-5 text-indigo-400 flex-shrink-0" />
+              <div className="bg-slate-50 border border-slate-100 p-3 rounded-xl flex items-center space-x-3">
+                <Users className="w-5 h-5 text-blue-500 flex-shrink-0" />
                 <div>
-                  <div className="text-[10px] text-slate-500 uppercase font-semibold">Employees</div>
-                  <div className="text-xs font-bold text-slate-300">{report.companyOverview?.employees || 'N/A'}</div>
+                  <div className="text-[9px] text-slate-400 uppercase font-bold">Employees</div>
+                  <div className="text-xs font-extrabold text-slate-700">{report.companyOverview?.employees || 'N/A'}</div>
                 </div>
               </div>
             </div>
 
-            <p className="text-xs text-slate-400 leading-relaxed italic">
+            <p className="text-xs text-slate-500 leading-relaxed italic">
               {report.companyOverview?.description || report.aiSummary?.split('\n').find(l => l.startsWith('This dossier') || l.startsWith('This report')) || 'Company is categorized as a publicly listed security.'}
             </p>
           </div>
@@ -261,27 +251,27 @@ export default function AnalysisReport({ report, onBack, onDelete }) {
           {/* AI Explanation / Core Catalysts & Risks */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Why Invest? Card */}
-            <div className="bg-[#0f1d1a]/30 border border-[#10b981]/25 rounded-2xl p-5 shadow-lg shadow-emerald-950/5">
-              <h3 className="font-extrabold text-sm text-emerald-400 uppercase tracking-wider mb-4 flex items-center space-x-2">
-                <ShieldCheck className="w-5 h-5 text-emerald-400" />
+            <div className="bg-emerald-50/20 border border-emerald-200 rounded-2xl p-5 shadow-sm">
+              <h3 className="font-extrabold text-sm text-emerald-700 uppercase tracking-wider mb-4 flex items-center space-x-2">
+                <ShieldCheck className="w-5 h-5 text-emerald-600" />
                 <span>Why Invest? (Catalysts)</span>
               </h3>
               <ul className="space-y-3">
                 {(report.opportunities || []).length > 0 ? (
                   report.opportunities.map((item, i) => (
-                    <li key={i} className="text-xs text-slate-300 flex items-start space-x-2.5">
-                      <span className="text-emerald-400 font-bold select-none mt-0.5">&bull;</span>
+                    <li key={i} className="text-xs text-slate-700 flex items-start space-x-2.5">
+                      <span className="text-emerald-500 font-bold select-none mt-0.5">&bull;</span>
                       <span>{item}</span>
                     </li>
                   ))
                 ) : (
                   <>
-                    <li className="text-xs text-slate-300 flex items-start space-x-2.5">
-                      <span className="text-emerald-400 font-bold mt-0.5">&bull;</span>
+                    <li className="text-xs text-slate-700 flex items-start space-x-2.5">
+                      <span className="text-emerald-500 font-bold mt-0.5">&bull;</span>
                       <span>Competitive market share advantages inside sector groups.</span>
                     </li>
-                    <li className="text-xs text-slate-300 flex items-start space-x-2.5">
-                      <span className="text-emerald-400 font-bold mt-0.5">&bull;</span>
+                    <li className="text-xs text-slate-700 flex items-start space-x-2.5">
+                      <span className="text-emerald-500 font-bold mt-0.5">&bull;</span>
                       <span>Strengthening operational margins from buyback triggers.</span>
                     </li>
                   </>
@@ -290,27 +280,27 @@ export default function AnalysisReport({ report, onBack, onDelete }) {
             </div>
 
             {/* Potential Risks Card */}
-            <div className="bg-[#1f1115]/30 border border-[#ef4444]/25 rounded-2xl p-5 shadow-lg shadow-red-950/5">
-              <h3 className="font-extrabold text-sm text-red-400 uppercase tracking-wider mb-4 flex items-center space-x-2">
-                <AlertOctagon className="w-5 h-5 text-red-400" />
+            <div className="bg-red-50/20 border border-red-200 rounded-2xl p-5 shadow-sm">
+              <h3 className="font-extrabold text-sm text-red-700 uppercase tracking-wider mb-4 flex items-center space-x-2">
+                <AlertOctagon className="w-5 h-5 text-red-500" />
                 <span>Potential Risks & Headwinds</span>
               </h3>
               <ul className="space-y-3">
                 {(report.risks || []).length > 0 ? (
                   report.risks.map((item, i) => (
-                    <li key={i} className="text-xs text-slate-300 flex items-start space-x-2.5">
-                      <span className="text-red-400 font-bold select-none mt-0.5">&bull;</span>
+                    <li key={i} className="text-xs text-slate-700 flex items-start space-x-2.5">
+                      <span className="text-red-500 font-bold select-none mt-0.5">&bull;</span>
                       <span>{item}</span>
                     </li>
                   ))
                 ) : (
                   <>
-                    <li className="text-xs text-slate-300 flex items-start space-x-2.5">
-                      <span className="text-red-400 font-bold mt-0.5">&bull;</span>
+                    <li className="text-xs text-slate-700 flex items-start space-x-2.5">
+                      <span className="text-red-500 font-bold mt-0.5">&bull;</span>
                       <span>Competitive margin pressures and cost shifts.</span>
                     </li>
-                    <li className="text-xs text-slate-300 flex items-start space-x-2.5">
-                      <span className="text-red-400 font-bold mt-0.5">&bull;</span>
+                    <li className="text-xs text-slate-700 flex items-start space-x-2.5">
+                      <span className="text-red-500 font-bold mt-0.5">&bull;</span>
                       <span>Macro headwinds under persistent interest rate pressures.</span>
                     </li>
                   </>
@@ -319,7 +309,7 @@ export default function AnalysisReport({ report, onBack, onDelete }) {
             </div>
           </div>
 
-          {/* SVG Charts Row (REVENUE AND NET INCOME CHARTS) */}
+          {/* SVG Charts Row */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <RevenueTrendChart baseRevenue={report.financialData?.revenue} ticker={report.ticker} />
             <IncomeComparisonChart baseIncome={report.financialData?.netIncome} />
@@ -327,69 +317,69 @@ export default function AnalysisReport({ report, onBack, onDelete }) {
 
           {/* Financial Scorecard Grid */}
           <div>
-            <h4 className="text-sm font-semibold text-slate-300 uppercase tracking-wider mb-4 flex items-center space-x-2">
-              <TrendingUp className="w-4 h-4 text-emerald-500" />
+            <h4 className="text-xs font-extrabold text-slate-500 uppercase tracking-wider mb-4 flex items-center space-x-2">
+              <TrendingUp className="w-4 h-4 text-emerald-600" />
               <span>Core Financial Statement Scorecard</span>
             </h4>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="bg-[#0b0f19] border border-[#1e293b] p-4 rounded-xl">
-                <div className="text-[10px] text-slate-500 uppercase font-semibold">Market Capitalization</div>
-                <div className="text-base font-bold text-white mt-1">{formatValuation(report.financialData?.marketCap)}</div>
+              <div className="bg-white border border-slate-200 p-4 rounded-xl shadow-sm">
+                <div className="text-[9px] text-slate-400 uppercase font-bold">Market Capitalization</div>
+                <div className="text-base font-extrabold text-slate-800 mt-1">{formatValuation(report.financialData?.marketCap)}</div>
               </div>
-              <div className="bg-[#0b0f19] border border-[#1e293b] p-4 rounded-xl">
-                <div className="text-[10px] text-slate-500 uppercase font-semibold">P/E Ratio</div>
-                <div className="text-base font-bold text-white mt-1">{formatDecimal(report.financialData?.peRatio, 2)}</div>
+              <div className="bg-white border border-slate-200 p-4 rounded-xl shadow-sm">
+                <div className="text-[9px] text-slate-400 uppercase font-bold">P/E Ratio</div>
+                <div className="text-base font-extrabold text-slate-800 mt-1">{formatDecimal(report.financialData?.peRatio, 2)}</div>
               </div>
-              <div className="bg-[#0b0f19] border border-[#1e293b] p-4 rounded-xl">
-                <div className="text-[10px] text-slate-500 uppercase font-semibold">Debt to Equity</div>
-                <div className="text-base font-bold text-white mt-1">{formatDecimal(report.financialData?.debtToEquity, 2)}</div>
+              <div className="bg-white border border-slate-200 p-4 rounded-xl shadow-sm">
+                <div className="text-[9px] text-slate-400 uppercase font-bold">Debt to Equity</div>
+                <div className="text-base font-extrabold text-slate-800 mt-1">{formatDecimal(report.financialData?.debtToEquity, 2)}</div>
               </div>
-              <div className="bg-[#0b0f19] border border-[#1e293b] p-4 rounded-xl">
-                <div className="text-[10px] text-slate-500 uppercase font-semibold">Earnings Per Share (EPS)</div>
-                <div className="text-base font-bold text-white mt-1">{formatDecimal(report.financialData?.eps, 2)}</div>
+              <div className="bg-white border border-slate-200 p-4 rounded-xl shadow-sm">
+                <div className="text-[9px] text-slate-400 uppercase font-bold">Earnings Per Share (EPS)</div>
+                <div className="text-base font-extrabold text-slate-800 mt-1">{formatDecimal(report.financialData?.eps, 2)}</div>
               </div>
-              <div className="bg-[#0b0f19] border border-[#1e293b] p-4 rounded-xl">
-                <div className="text-[10px] text-slate-500 uppercase font-semibold">Revenue</div>
-                <div className="text-base font-bold text-white mt-1">{formatValuation(report.financialData?.revenue)}</div>
+              <div className="bg-white border border-slate-200 p-4 rounded-xl shadow-sm">
+                <div className="text-[9px] text-slate-400 uppercase font-bold">Revenue</div>
+                <div className="text-base font-extrabold text-slate-800 mt-1">{formatValuation(report.financialData?.revenue)}</div>
               </div>
-              <div className="bg-[#0b0f19] border border-[#1e293b] p-4 rounded-xl">
-                <div className="text-[10px] text-slate-500 uppercase font-semibold">Net Income</div>
-                <div className="text-base font-bold text-white mt-1">{formatValuation(report.financialData?.netIncome)}</div>
+              <div className="bg-white border border-slate-200 p-4 rounded-xl shadow-sm">
+                <div className="text-[9px] text-slate-400 uppercase font-bold">Net Income</div>
+                <div className="text-base font-extrabold text-slate-800 mt-1">{formatValuation(report.financialData?.netIncome)}</div>
               </div>
-              <div className="bg-[#0b0f19] border border-[#1e293b] p-4 rounded-xl">
-                <div className="text-[10px] text-slate-500 uppercase font-semibold">Free Cash Flow</div>
-                <div className="text-base font-bold text-white mt-1">{formatValuation(report.financialData?.freeCashFlow)}</div>
+              <div className="bg-white border border-slate-200 p-4 rounded-xl shadow-sm">
+                <div className="text-[9px] text-slate-400 uppercase font-bold">Free Cash Flow</div>
+                <div className="text-base font-extrabold text-slate-800 mt-1">{formatValuation(report.financialData?.freeCashFlow)}</div>
               </div>
-              <div className="bg-[#0b0f19] border border-[#1e293b] p-4 rounded-xl">
-                <div className="text-[10px] text-slate-500 uppercase font-semibold">Return on Equity (ROE)</div>
-                <div className="text-base font-bold text-white mt-1">{formatPercent(report.financialData?.roe)}</div>
+              <div className="bg-white border border-slate-200 p-4 rounded-xl shadow-sm">
+                <div className="text-[9px] text-slate-400 uppercase font-bold">Return on Equity (ROE)</div>
+                <div className="text-base font-extrabold text-slate-800 mt-1">{formatPercent(report.financialData?.roe)}</div>
               </div>
-              <div className="bg-[#0b0f19] border border-[#1e293b] p-4 rounded-xl">
-                <div className="text-[10px] text-slate-500 uppercase font-semibold">Dividend Yield</div>
-                <div className="text-base font-bold text-white mt-1">{formatPercent(report.financialData?.dividendYield)}</div>
+              <div className="bg-white border border-slate-200 p-4 rounded-xl shadow-sm">
+                <div className="text-[9px] text-slate-400 uppercase font-bold">Dividend Yield</div>
+                <div className="text-base font-extrabold text-slate-800 mt-1">{formatPercent(report.financialData?.dividendYield)}</div>
               </div>
-              <div className="bg-[#0b0f19] border border-[#1e293b] p-4 rounded-xl">
-                <div className="text-[10px] text-slate-500 uppercase font-semibold">Current Ratio</div>
-                <div className="text-base font-bold text-white mt-1">{formatDecimal(report.financialData?.currentRatio, 2)}</div>
+              <div className="bg-white border border-slate-200 p-4 rounded-xl shadow-sm">
+                <div className="text-[9px] text-slate-400 uppercase font-bold">Current Ratio</div>
+                <div className="text-base font-extrabold text-slate-800 mt-1">{formatDecimal(report.financialData?.currentRatio, 2)}</div>
               </div>
-              <div className="bg-[#0b0f19] border border-[#1e293b] p-4 rounded-xl">
-                <div className="text-[10px] text-slate-500 uppercase font-semibold">Operating Margin</div>
-                <div className="text-base font-bold text-white mt-1">{formatPercent(report.financialData?.operatingMargin)}</div>
+              <div className="bg-white border border-slate-200 p-4 rounded-xl shadow-sm">
+                <div className="text-[9px] text-slate-400 uppercase font-bold">Operating Margin</div>
+                <div className="text-base font-extrabold text-slate-800 mt-1">{formatPercent(report.financialData?.operatingMargin)}</div>
               </div>
-              <div className="bg-[#0b0f19] border border-[#1e293b] p-4 rounded-xl flex items-center space-x-2 bg-blue-950/10 border-blue-500/20">
-                <Landmark className="w-5 h-5 text-blue-400" />
-                <div className="text-[10px] text-slate-400 font-medium">Verified SEC Data</div>
+              <div className="bg-blue-50/50 border border-blue-100 p-4 rounded-xl flex items-center space-x-2 shadow-sm">
+                <Landmark className="w-5 h-5 text-blue-600" />
+                <div className="text-[10px] text-blue-700 font-bold">Verified SEC Data</div>
               </div>
             </div>
           </div>
 
           {/* AI Analysis Markdown Container */}
-          <div className="bg-[#1e293b]/10 border border-[#334155]/30 rounded-2xl p-6 md:p-8">
-            <div className="flex items-center space-x-2 text-blue-400 mb-4 border-b border-[#334155]/20 pb-3">
+          <div className="bg-white border border-slate-200 rounded-2xl p-6 md:p-8 shadow-sm">
+            <div className="flex items-center space-x-2 text-blue-600 mb-4 border-b border-slate-100 pb-3">
               <Sparkles className="w-5 h-5" />
-              <h3 className="font-bold text-lg">Synthesized Analysis Report</h3>
+              <h3 className="font-extrabold text-lg">Synthesized Analysis Report</h3>
             </div>
-            <article className="prose prose-invert max-w-none text-slate-300 space-y-4 text-sm leading-relaxed whitespace-pre-wrap">
+            <article className="prose max-w-none text-slate-655 space-y-4 text-sm leading-relaxed whitespace-pre-wrap">
               {report.aiSummary}
             </article>
           </div>
@@ -400,18 +390,18 @@ export default function AnalysisReport({ report, onBack, onDelete }) {
         <div className="space-y-6">
           
           {/* Q&A Chat Side Drawer */}
-          <div className="bg-[#1e293b]/40 border border-[#334155]/60 rounded-2xl flex flex-col h-[400px] overflow-hidden shadow-xl">
-            <div className="bg-[#1e293b] px-4 py-3 border-b border-[#334155] flex items-center space-x-2">
-              <MessageSquare className="w-4 h-4 text-blue-500" />
-              <span className="font-semibold text-white text-sm">Interrogate Analysis</span>
+          <div className="bg-white border border-slate-200 rounded-2xl flex flex-col h-[400px] overflow-hidden shadow-md">
+            <div className="bg-slate-50 px-4 py-3 border-b border-slate-200 flex items-center space-x-2">
+              <MessageSquare className="w-4 h-4 text-blue-600" />
+              <span className="font-extrabold text-slate-700 text-sm">Interrogate Analysis</span>
             </div>
 
             {/* Chat Body */}
             <div className="flex-1 overflow-y-auto p-4 space-y-3">
               {messages.map((msg, idx) => (
                 <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                  <div className={`max-w-[85%] rounded-xl p-3 text-xs leading-normal ${
-                    msg.role === 'user' ? 'bg-blue-600 text-white' : 'bg-[#0b0f19] border border-[#1e293b] text-slate-300'
+                  <div className={`max-w-[85%] rounded-xl p-3 text-xs leading-normal font-semibold ${
+                    msg.role === 'user' ? 'bg-blue-600 text-white' : 'bg-slate-100 border border-slate-200 text-slate-700'
                   }`}>
                     {msg.content}
                   </div>
@@ -420,23 +410,23 @@ export default function AnalysisReport({ report, onBack, onDelete }) {
             </div>
 
             {/* Chat Input */}
-            <form onSubmit={handleSend} className="p-3 border-t border-[#334155] bg-[#0b0f19] flex items-center space-x-2">
+            <form onSubmit={handleSend} className="p-3 border-t border-slate-200 bg-slate-50 flex items-center space-x-2">
               <input
                 type="text"
                 placeholder="Ask about this analysis..."
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
-                className="flex-1 bg-[#1e293b] border border-[#334155] rounded-lg px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none"
+                className="flex-1 bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-blue-500"
               />
-              <button type="submit" className="p-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition-colors">
+              <button type="submit" className="p-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition-colors cursor-pointer">
                 <Send className="w-3.5 h-3.5" />
               </button>
             </form>
           </div>
 
-          {/* Aggregated Clickable News List (LIVE CARD DESIGNS) */}
+          {/* Aggregated Clickable News List */}
           <div>
-            <h4 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">Aggregated News Context</h4>
+            <h4 className="text-xs font-extrabold text-slate-400 uppercase tracking-wider mb-3">Aggregated News Context</h4>
             <div className="space-y-3">
               {(report.latestNews || report.news || []).map((item, idx) => (
                 <a
@@ -444,23 +434,23 @@ export default function AnalysisReport({ report, onBack, onDelete }) {
                   href={item.url && item.url !== '#' ? item.url : undefined}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className={`block bg-[#0b0f19] hover:bg-[#1e293b]/30 border border-[#1e293b] hover:border-[#334155]/60 p-4 rounded-xl text-xs space-y-2 transition-all group ${
+                  className={`block bg-white hover:bg-slate-50/50 border border-slate-200 hover:border-slate-350 p-4 rounded-xl text-xs space-y-2 transition-all shadow-sm group ${
                     item.url && item.url !== '#' ? 'cursor-pointer' : 'cursor-default'
                   }`}
                 >
                   <div className="flex items-center justify-between">
-                    <span className="text-[10px] text-blue-400 font-mono font-bold uppercase tracking-wider">{item.source}</span>
+                    <span className="text-[10px] text-blue-600 font-mono font-bold uppercase tracking-wider">{item.source}</span>
                     <span className={`text-[9px] px-2 py-0.2 rounded font-bold uppercase tracking-wide ${getSentimentBadge(item.sentiment)}`}>
                       {item.sentiment || 'NEUTRAL'}
                     </span>
                   </div>
-                  <h5 className="font-semibold text-slate-200 line-clamp-2 group-hover:text-white flex items-start justify-between">
+                  <h5 className="font-bold text-slate-700 line-clamp-2 group-hover:text-blue-600 flex items-start justify-between">
                     <span>{item.headline}</span>
                     {item.url && item.url !== '#' && (
-                      <ArrowUpRight className="w-3.5 h-3.5 text-slate-500 group-hover:text-blue-400 ml-1.5 flex-shrink-0 transition-colors" />
+                      <ArrowUpRight className="w-3.5 h-3.5 text-slate-400 group-hover:text-blue-600 ml-1.5 flex-shrink-0 transition-colors" />
                     )}
                   </h5>
-                  <div className="text-[9px] text-slate-500 font-medium">
+                  <div className="text-[9px] text-slate-400 font-bold">
                     {formatNewsTime(item.publishedAt)}
                   </div>
                 </a>

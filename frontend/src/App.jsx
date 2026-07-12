@@ -167,7 +167,7 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0b0f19] text-slate-100 flex flex-col">
+    <div className="min-h-screen bg-[#f8fafc] text-[#0f172a] flex flex-col">
       {/* Navigation Header */}
       <Navbar activePage={activePage} setActivePage={setActivePage} />
 
@@ -199,7 +199,7 @@ export default function App() {
       </main>
 
       {/* Footer Branding */}
-      <footer className="border-t border-[#1e293b] py-6 text-center text-xs text-slate-500 bg-[#0f172a]/40">
+      <footer className="border-t border-slate-200 py-6 text-center text-xs text-slate-500 bg-white shadow-inner">
         &copy; {new Date().getFullYear()} INSIDE-IIM. Institutional Grade Investment Intelligence.
       </footer>
     </div>
