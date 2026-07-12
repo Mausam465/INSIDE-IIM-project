@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Search, Compass, AlertCircle } from 'lucide-react';
 
 /**
- * Home Component (Search & Trigger Terminal) in Metallic Steel-Blue Theme
+ * Home Component (Search & Trigger Terminal) in Warm Cream-Beige Theme
  */
 export default function Home({ onSearch }) {
   const [ticker, setTicker] = useState('');
@@ -39,65 +39,56 @@ export default function Home({ onSearch }) {
   ];
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-12">
+    <div className="max-w-4xl mx-auto px-4 py-16">
       {/* Intro Header */}
       <div className="text-center mb-12">
-        <div className="text-[10px] text-slate-500 font-mono font-bold tracking-[0.25em] mb-4 uppercase">
-          PROCESS_SYS // AGENT_PIPELINE
-        </div>
-        <h2 className="text-3xl sm:text-4xl font-extrabold text-[#0f172a] mb-4 uppercase font-mono tracking-wider leading-tight">
-          AI Investment Research Console
+        <h2 className="text-4xl sm:text-5xl font-black text-slate-800 tracking-tight mb-4">
+          AI Investment Research Assistant
         </h2>
-        <p className="text-slate-500 text-xs font-mono uppercase tracking-widest max-w-xl mx-auto leading-relaxed">
+        <p className="text-slate-500 text-lg max-w-2xl mx-auto leading-relaxed">
           Compile institutional-grade analysis reports leveraging Google Gemini, news pipelines, and real-time financial tools.
         </p>
       </div>
 
       {/* Main Form Card */}
-      <div className="bg-white/70 backdrop-blur-md border border-slate-200/60 rounded-xl p-8 shadow-lg mb-10 relative">
-        {/* Monospace Tech crosshairs */}
-        <span className="absolute top-2 left-2 text-slate-400/30 text-xs font-mono font-bold select-none">+</span>
-        <span className="absolute top-2 right-2 text-slate-400/30 text-xs font-mono font-bold select-none">+</span>
-        <span className="absolute bottom-2 left-2 text-slate-400/30 text-xs font-mono font-bold select-none">+</span>
-        <span className="absolute bottom-2 right-2 text-slate-400/30 text-xs font-mono font-bold select-none">+</span>
-
-        <form onSubmit={handleSubmit} className="space-y-6">
+      <div className="bg-white border border-slate-200/80 rounded-3xl p-10 shadow-xl shadow-slate-100/50 mb-12">
+        <form onSubmit={handleSubmit} className="space-y-8">
           
           {/* Ticker Input */}
           <div>
-            <div className="flex justify-between items-center mb-2">
-              <label className="block text-[10px] font-bold text-slate-600 uppercase tracking-widest font-mono">
-                Asset Ticker Symbol // SEC_IDX
+            <div className="flex justify-between items-center mb-3">
+              <label className="block text-sm font-extrabold text-slate-700 tracking-wide">
+                Company Ticker Symbol
               </label>
-              <span className="text-[9px] text-slate-400 font-mono">SYS_REG: COMP_VAL</span>
+              <span className="text-xs text-slate-400 font-medium">e.g., TSLA, NVDA</span>
             </div>
             <input
               type="text"
               placeholder="E.G. AAPL, NVDA, TSLA"
               value={ticker}
               onChange={(e) => setTicker(e.target.value)}
-              className="w-full bg-white border border-slate-300 rounded px-4 py-3 text-slate-900 placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 transition-all font-mono uppercase text-xs tracking-wider"
+              className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-5 py-4 text-slate-900 placeholder-slate-400 focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/10 transition-all font-mono uppercase text-base tracking-wider"
             />
           </div>
 
           {/* Research Query Input */}
           <div>
-            <label className="block text-[10px] font-bold text-slate-600 uppercase tracking-widest font-mono mb-2">
-              Focus Objective // QUERY_STRING
+            <label className="block text-sm font-extrabold text-slate-700 tracking-wide mb-3">
+              Research Objective / Focus Query
             </label>
             <textarea
               rows={4}
               placeholder="Detail what specific aspects of the financial or operational state you would like the AI Agent to investigate..."
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              className="w-full bg-white border border-slate-300 rounded px-4 py-3 text-slate-900 placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 transition-all resize-none font-mono text-xs leading-relaxed"
+              className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-5 py-4 text-slate-900 placeholder-slate-400 focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/10 transition-all resize-none text-base leading-relaxed"
             />
           </div>
 
           {/* Validation Alert */}
           {error && (
-            <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg flex items-center space-x-3 text-xs font-mono">
-              <AlertCircle className="w-4 h-4 flex-shrink-0" />
+            <div className="bg-red-50 border border-red-200 text-red-600 px-5 py-4 rounded-xl flex items-center space-x-3 text-sm font-semibold">
+              <AlertCircle className="w-5 h-5 flex-shrink-0" />
               <span>{error}</span>
             </div>
           )}
@@ -105,10 +96,10 @@ export default function Home({ onSearch }) {
           {/* Submit Button */}
           <button
             type="submit"
-            className="w-full bg-blue-600 hover:bg-blue-550 text-white font-bold py-3 px-6 rounded transition-all shadow-md hover:shadow-lg shadow-blue-500/15 cursor-pointer text-xs font-mono tracking-wider"
+            className="w-full bg-orange-500 hover:bg-orange-600 text-white font-extrabold py-4 px-6 rounded-2xl flex items-center justify-center space-x-3 transition-all shadow-lg hover:shadow-xl shadow-orange-500/15 cursor-pointer text-base tracking-wide"
           >
-            <Search className="w-4 h-4 inline-block mr-2" />
-            <span>RUN_AGENT_PROCESS</span>
+            <Search className="w-5 h-5" />
+            <span>Generate Research Report</span>
           </button>
 
         </form>
@@ -116,29 +107,25 @@ export default function Home({ onSearch }) {
 
       {/* Suggested Shortcuts */}
       <div>
-        <div className="flex items-center space-x-2 text-slate-500 mb-4 font-mono">
-          <Compass className="w-3.5 h-3.5 text-blue-500" />
-          <span className="text-[10px] font-bold uppercase tracking-widest">Suggested Templates // Presets</span>
+        <div className="flex items-center space-x-2.5 text-slate-650 mb-6">
+          <Compass className="w-5 h-5 text-orange-500" />
+          <span className="text-sm font-extrabold uppercase tracking-widest">Suggested Templates</span>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {shortcuts.map((item, idx) => (
             <button
               key={idx}
               onClick={() => handleShortcutClick(item.ticker, item.query)}
-              className="bg-white/60 hover:bg-white/90 border border-slate-200 rounded p-4 transition-all group relative cursor-pointer shadow-sm hover:shadow-md"
+              className="bg-white hover:bg-slate-50/50 border border-slate-200 rounded-2xl p-6 transition-all group flex flex-col justify-between shadow-sm hover:shadow-md cursor-pointer"
             >
-              {/* Corner crosshairs for templates */}
-              <span className="absolute top-1.5 left-1.5 text-slate-400/20 text-[8px] font-mono select-none">+</span>
-              <span className="absolute top-1.5 right-1.5 text-slate-400/20 text-[8px] font-mono select-none">+</span>
-
               <div>
-                <span className="inline-block bg-blue-50 text-blue-600 font-mono font-bold text-[9px] px-2 py-0.5 rounded mb-2 border border-blue-100">
+                <span className="inline-block bg-orange-50 text-orange-600 font-mono font-bold text-xs px-2.5 py-0.5 rounded-lg mb-3 border border-orange-100">
                   {item.ticker}
                 </span>
-                <h4 className="text-slate-800 font-bold group-hover:text-blue-600 transition-colors mb-1 text-xs font-mono">
+                <h4 className="text-slate-800 font-extrabold group-hover:text-orange-500 transition-colors mb-1.5 text-base">
                   {item.label}
                 </h4>
-                <p className="text-[10px] text-slate-500 line-clamp-2 leading-relaxed">
+                <p className="text-sm text-slate-500 leading-relaxed">
                   {item.query}
                 </p>
               </div>

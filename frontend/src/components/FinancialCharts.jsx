@@ -1,7 +1,7 @@
 import React from 'react';
 
 /**
- * Custom SVG Financial Charts in Light Theme
+ * Custom SVG Financial Charts in Warm Cream-Beige Theme
  */
 
 export function RevenueTrendChart({ baseRevenue, ticker }) {
@@ -34,21 +34,21 @@ export function RevenueTrendChart({ baseRevenue, ticker }) {
   };
 
   return (
-    <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+    <div className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-sm">
       <div className="flex items-center justify-between mb-3">
-        <h5 className="text-xs font-bold text-slate-700 uppercase tracking-wider">Revenue Trend (5-Year)</h5>
-        <span className="text-[10px] text-blue-600 font-mono font-bold">Scale: USD</span>
+        <h5 className="text-xs font-extrabold text-slate-700 uppercase tracking-wider">Revenue Trend (5-Year)</h5>
+        <span className="text-[10px] text-orange-600 font-mono font-bold">Scale: USD</span>
       </div>
 
       <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-auto overflow-visible">
         <defs>
           <linearGradient id="areaGradient" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.25" />
-            <stop offset="100%" stopColor="#3b82f6" stopOpacity="0.0" />
+            <stop offset="0%" stopColor="#f59e0b" stopOpacity="0.25" />
+            <stop offset="100%" stopColor="#f59e0b" stopOpacity="0.0" />
           </linearGradient>
           <linearGradient id="lineGradient" x1="0" y1="0" x2="1" y2="0">
-            <stop offset="0%" stopColor="#3b82f6" />
-            <stop offset="100%" stopColor="#6366f1" />
+            <stop offset="0%" stopColor="#f59e0b" />
+            <stop offset="100%" stopColor="#f97316" />
           </linearGradient>
         </defs>
 
@@ -63,8 +63,8 @@ export function RevenueTrendChart({ baseRevenue, ticker }) {
                 y1={y}
                 x2={width - padding.right}
                 y2={y}
-                stroke="#e2e8f0"
-                strokeWidth="0.8"
+                stroke="#f1f5f9"
+                strokeWidth="1.2"
                 strokeDasharray="4,4"
               />
               <text
@@ -92,7 +92,7 @@ export function RevenueTrendChart({ baseRevenue, ticker }) {
           strokeLinecap="round"
           strokeLinejoin="round"
           points={points}
-          className="drop-shadow-[0_2px_4px_rgba(59,130,246,0.15)]"
+          className="drop-shadow-[0_2px_4px_rgba(245,158,11,0.15)]"
         />
 
         {/* X Axis Labels */}
@@ -106,7 +106,7 @@ export function RevenueTrendChart({ baseRevenue, ticker }) {
                 cy={y}
                 r="4"
                 fill="#ffffff"
-                stroke="#3b82f6"
+                stroke="#f59e0b"
                 strokeWidth="2.5"
               />
               <text
@@ -152,17 +152,17 @@ export function IncomeComparisonChart({ baseIncome }) {
   };
 
   return (
-    <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+    <div className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-sm">
       <div className="flex items-center justify-between mb-3">
-        <h5 className="text-xs font-bold text-slate-700 uppercase tracking-wider">Quarterly Net Income</h5>
-        <span className="text-[10px] text-emerald-600 font-mono font-bold">Scale: USD</span>
+        <h5 className="text-xs font-extrabold text-slate-700 uppercase tracking-wider">Quarterly Net Income</h5>
+        <span className="text-[10px] text-orange-600 font-mono font-bold">Scale: USD</span>
       </div>
 
       <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-auto overflow-visible">
         <defs>
           <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#10b981" />
-            <stop offset="100%" stopColor="#059669" stopOpacity="0.8" />
+            <stop offset="0%" stopColor="#f59e0b" />
+            <stop offset="100%" stopColor="#d97706" stopOpacity="0.8" />
           </linearGradient>
         </defs>
 
@@ -177,8 +177,8 @@ export function IncomeComparisonChart({ baseIncome }) {
                 y1={y}
                 x2={width - padding.right}
                 y2={y}
-                stroke="#e2e8f0"
-                strokeWidth="0.8"
+                stroke="#f1f5f9"
+                strokeWidth="1.2"
                 strokeDasharray="4,4"
               />
               <text
@@ -215,7 +215,7 @@ export function IncomeComparisonChart({ baseIncome }) {
               <text
                 x={x}
                 y={y - 6}
-                fill="#059669"
+                fill="#d97706"
                 fontSize="9"
                 fontWeight="bold"
                 textAnchor="middle"
