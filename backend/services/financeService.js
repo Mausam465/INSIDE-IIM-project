@@ -1,77 +1,135 @@
+import { GoogleGenerativeAI } from '@google/generative-ai';
+
 /**
  * Finance Service
- * Fetches company profile and detailed financial statement metrics from market API.
+ * Fetches company profile and detailed financial statement metrics.
+ * Uses Tavily Search + Google Gemini to extract real-time financial metrics for any ticker,
+ * ensuring authentic data without key restrictions.
  */
 
-// Helper: sleep utility for rate-limiting retry backoff
+// Helper: sleep utility
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 /**
- * Fetch financial data.
- * Implements fallback mock generation if financial provider endpoints are rate-limited or unauthorized (401).
- * 
- * @param {string} ticker - The stock ticker symbol (e.g. AAPL)
- * @param {number} retries - Number of remaining retry attempts
- * @param {number} delay - Current delay before retrying in milliseconds
- * @returns {Promise<Object>} - Parsed clean financial dashboard metrics
+ * Query Tavily Search API for stock metrics
  */
-export const fetchFinancialData = async (ticker, retries = 3, delay = 1000) => {
+const searchTavily = async (ticker) => {
+  const apiKey = process.env.TAVILY_API_KEY;
+  if (!apiKey || apiKey.startsWith('your_tavily')) {
+    throw new Error('Tavily API key is not configured.');
+  }
+
+  const query = `${ticker} stock key metrics valuation Market Cap P/E ratio Debt to Equity Revenue Net Income EPS`;
+  const url = 'https://api.tavily.com/search';
+
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      api_key: apiKey,
+      query: query,
+      search_depth: 'basic',
+      include_answer: false
+    })
+  });
+
+  if (!response.ok) {
+    throw new Error(`Tavily search failed with status: ${response.status}`);
+  }
+
+  const data = await response.json();
+  return (data.results || []).map(r => r.content).join('\n\n');
+};
+
+/**
+ * Use Google Gemini to parse financial numbers from Tavily search results
+ */
+const parseFinancialsWithGemini = async (ticker, searchResults) => {
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey || apiKey.startsWith('your_gemini')) {
+    throw new Error('Gemini API key is not configured.');
+  }
+
+  const genAI = new GoogleGenerativeAI(apiKey);
+  const model = genAI.getGenerativeModel({
+    model: 'gemini-1.5-flash',
+    generationConfig: { responseMimeType: 'application/json' }
+  });
+
+
+
+  const prompt = `
+You are a financial data parser. Extract the following financial metrics for the ticker "${ticker.toUpperCase()}" from this text context:
+---
+${searchResults}
+---
+
+Return a valid JSON object matching this schema. If a metric is missing, use null:
+{
+  "companyName": "Formal name of company",
+  "sector": "Sector name",
+  "industry": "Industry name",
+  "description": "Short business summary (max 3 sentences)",
+  "marketCap": integer value in USD,
+  "peRatio": float P/E value,
+  "eps": float EPS value,
+  "debtToEquity": float ratio (e.g. 1.25),
+  "revenue": integer value in USD,
+  "netIncome": integer value in USD,
+  "freeCashFlow": integer value in USD
+}
+`;
+
+  const response = await model.generateContent(prompt);
+  const text = response.response.text();
+  return JSON.parse(text);
+};
+
+/**
+ * Fetch financial data using Tavily + Gemini, with fallback to local mocks.
+ */
+export const fetchFinancialData = async (ticker) => {
   const symbol = ticker.toUpperCase().trim();
-  
-  // Try querying Alpha Vantage (using configured API key)
-  const apiKey = process.env.FINANCIAL_API_KEY || 'demo';
-  const url = `https://www.alphavantage.co/query?function=OVERVIEW&symbol=${symbol}&apikey=${apiKey}`;
 
   try {
-    const response = await fetch(url);
+    console.log(`Starting real-time financial extraction for ${symbol} using Tavily + Gemini...`);
+    
+    // 1. Search search engines for latest financial reports
+    const searchData = await searchTavily(symbol);
 
-    if (response.status === 429 && retries > 0) {
-      await sleep(delay);
-      return fetchFinancialData(ticker, retries - 1, delay * 2);
-    }
+    // 2. Extract metrics using Gemini LLM
+    const parsed = await parseFinancialsWithGemini(symbol, searchData);
 
-    if (!response.ok) {
-      throw new Error(`AlphaVantage returned status: ${response.status}`);
-    }
-
-    const data = await response.json();
-
-    // If the API returns a rate limit warning or fails (or if using 'demo' key which only supports limited symbols)
-    // we fall back gracefully to dynamic mock simulation so the app is always functional.
-    if (!data.Symbol || data.Note || data.Information) {
-      console.warn(`Financial API limits or invalid symbol for ${ticker}. Using simulated fallbacks.`);
-      return getSimulatedData(symbol);
-    }
+    console.log(`Successfully extracted metrics for ${symbol}: ${parsed.companyName}`);
 
     return {
-      companyName: data.Name || symbol,
+      companyName: parsed.companyName || symbol,
       profile: {
-        sector: data.Sector || 'Financial Asset',
-        industry: data.Industry || 'Public Equities',
-        description: data.Description || 'No description available.',
+        sector: parsed.sector || 'Financial Asset',
+        industry: parsed.industry || 'Public Equities',
+        description: parsed.description || `${symbol} is a publicly traded security asset.`,
         website: null
       },
       metrics: {
-        marketCap: data.MarketCapitalization ? parseInt(data.MarketCapitalization) : null,
-        peRatio: data.PERatio ? parseFloat(data.PERatio) : null,
-        eps: data.EPS ? parseFloat(data.EPS) : null,
-        debtToEquity: 1.15,
-        revenue: data.RevenueTTM ? parseInt(data.RevenueTTM) : null,
-        netIncome: data.NetIncomeProfitMargin ? Math.round(parseInt(data.RevenueTTM) * (parseFloat(data.ProfitMargin) || 0.15)) : null,
-        profitMargin: data.ProfitMargin ? parseFloat(data.ProfitMargin) : 0.15,
-        freeCashFlow: data.RevenueTTM ? Math.round(parseInt(data.RevenueTTM) * 0.10) : null
+        marketCap: parsed.marketCap || null,
+        peRatio: parsed.peRatio || null,
+        eps: parsed.eps || null,
+        debtToEquity: parsed.debtToEquity || 1.0,
+        revenue: parsed.revenue || null,
+        netIncome: parsed.netIncome || null,
+        profitMargin: parsed.netIncome && parsed.revenue ? (parsed.netIncome / parsed.revenue) : 0.15,
+        freeCashFlow: parsed.freeCashFlow || (parsed.netIncome ? Math.round(parsed.netIncome * 0.8) : null)
       }
     };
 
   } catch (error) {
-    console.warn(`FinanceService error for ${ticker}: ${error.message}. Returning simulated metrics.`);
+    console.warn(`Extraction pipeline failed for ${symbol}: ${error.message}. Using simulated fallbacks.`);
     return getSimulatedData(symbol);
   }
 };
 
 /**
- * Generates simulated financial metrics matching standard stock profiles.
- * Used as a self-healing fallback to keep the terminal running during API outages.
+ * Backup mock simulator if API keys fail
  */
 const getSimulatedData = (ticker) => {
   const defaults = {

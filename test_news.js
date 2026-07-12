@@ -1,3 +1,6 @@
+import dotenv from 'dotenv';
+dotenv.config({ path: './backend/.env' });
+
 import { fetchLatestNews } from './backend/services/newsService.js';
 
 async function testNewsService() {

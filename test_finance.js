@@ -1,3 +1,6 @@
+import dotenv from 'dotenv';
+dotenv.config({ path: './backend/.env' });
+
 import { fetchFinancialData } from './backend/services/financeService.js';
 
 async function testFinanceService() {
