@@ -29,18 +29,29 @@ This is a synthesized mock investment analysis report for **${ticker.toUpperCase
     const report = await Report.create({
       userId: req.user._id,
       ticker,
+      companyName: `${ticker.toUpperCase()} Corporation`,
       query,
-      summary: `Mock research report summary for ${ticker.toUpperCase()}`,
-      keyMetrics: {
+      financialData: {
         peRatio: 28.5,
         marketCap: 2500000000000,
         debtToEquity: 1.2,
         revenue: 95000000000,
-        profitMargin: 0.22
+        netIncome: 22000000000,
+        freeCashFlow: 15000000000
       },
-      sentimentScore: 0.75,
-      reportMarkdown: mockReportMarkdown
+      news: [
+        {
+          headline: `${ticker.toUpperCase()} announces Q3 earnings beating consensus projections.`,
+          source: 'MarketWire',
+          url: 'https://example.com/finance/news',
+          sentiment: 'POSITIVE'
+        }
+      ],
+      aiAnalysis: mockReportMarkdown,
+      investmentDecision: 'BUY',
+      confidenceScore: 85
     });
+
 
     res.status(201).json(report);
   } catch (error) {

@@ -5,6 +5,7 @@ import connectDB from './config/db.js';
 
 import authRoutes from './routes/authRoutes.js';
 import reportRoutes from './routes/reportRoutes.js';
+import companyRoutes from './routes/companyRoutes.js';
 
 dotenv.config();
 
@@ -17,6 +18,8 @@ app.use(express.json());
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/reports', reportRoutes);
+app.use('/api/company', companyRoutes);
+
 
 // Basic sanity route
 app.get('/health', (req, res) => {
