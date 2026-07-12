@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { Download, MessageSquare, Sparkles, Send, Trash2, Globe, Building2, User, MapPin, Users, TrendingUp, Landmark, ShieldCheck, AlertOctagon, ArrowUpRight } from 'lucide-react';
 import { RevenueTrendChart, IncomeComparisonChart } from '../components/FinancialCharts';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 /**
  * AnalysisReport Component in Warm Cream-Beige Theme with Large, Professional Typography
@@ -384,8 +386,10 @@ export default function AnalysisReport({ report, onBack, onDelete }) {
               <Sparkles className="w-5 h-5" />
               <h3 className="font-extrabold text-base uppercase tracking-wider">Synthesized Analysis Report</h3>
             </div>
-            <article className="prose max-w-none text-slate-700 space-y-4 text-base leading-relaxed whitespace-pre-wrap font-sans">
-              {report.aiSummary}
+            <article className="prose max-w-none prose-slate prose-headings:text-slate-900 prose-headings:font-black prose-h1:text-2xl prose-h2:text-xl prose-h3:text-lg prose-p:leading-relaxed prose-strong:text-slate-900 prose-li:my-1 text-slate-700 font-sans">
+              <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                {report.aiSummary}
+              </ReactMarkdown>
             </article>
           </div>
 
