@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, Eye, FileText } from 'lucide-react';
+import { Search, Eye, FileText, Globe } from 'lucide-react';
 
 /**
  * History Component
@@ -7,6 +7,7 @@ import { Search, Eye, FileText } from 'lucide-react';
  */
 export default function History({ reports, onViewReport, onDeleteReport }) {
   const [searchTerm, setSearchTerm] = useState('');
+  const [logoErrors, setLogoErrors] = useState({});
 
   const filteredReports = reports.filter(
     (r) =>
@@ -17,18 +18,47 @@ export default function History({ reports, onViewReport, onDeleteReport }) {
   const getDecisionColor = (decision) => {
     const d = (decision || '').toUpperCase();
     switch (d) {
+      case 'INVEST':
       case 'STRONG_BUY':
       case 'BUY':
-      case 'INVEST':
         return 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/25';
+      case 'PASS':
       case 'SELL':
       case 'STRONG_SELL':
-      case 'PASS':
         return 'bg-red-500/10 text-red-400 border border-red-500/25';
       case 'HOLD':
       default:
         return 'bg-amber-500/10 text-amber-400 border border-amber-500/25';
     }
+  };
+
+  // Helper: Format polished English date (e.g. July 12, 2026)
+  const formatDatePolished = (dateInput) => {
+    try {
+      const d = new Date(dateInput);
+      if (isNaN(d.getTime())) return 'N/A';
+      return d.toLocaleDateString('en-US', {
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric'
+      });
+    } catch {
+      return 'N/A';
+    }
+  };
+
+  // Get logo domain name based on company name
+  const getDomainFromCompanyName = (name) => {
+    const cleanName = name
+      .toLowerCase()
+      .replace(/inc\.|corp\.|corporation|ltd\./gi, '')
+      .replace(/[^a-z0-9]/g, '')
+      .trim();
+    return `${cleanName}.com`;
+  };
+
+  const handleLogoError = (id) => {
+    setLogoErrors(prev => ({ ...prev, [id]: true }));
   };
 
   return (
@@ -67,55 +97,78 @@ export default function History({ reports, onViewReport, onDeleteReport }) {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {filteredReports.map((report) => (
-            <div
-              key={report._id}
-              className="bg-[#1e293b]/20 hover:bg-[#1e293b]/50 border border-[#334155]/40 rounded-xl p-5 transition-all flex flex-col justify-between"
-            >
-              <div>
-                {/* Card Header */}
-                <div className="flex items-center justify-between mb-3">
+          {filteredReports.map((report) => {
+            const domain = getDomainFromCompanyName(report.companyName);
+            const logoUrl = `https://logo.clearbit.com/${domain}`;
+            const hasLogoError = logoErrors[report._id];
+
+            return (
+              <div
+                key={report._id}
+                className="bg-[#1e293b]/20 hover:bg-[#1e293b]/50 border border-[#334155]/40 rounded-xl p-5 transition-all flex flex-col justify-between"
+              >
+                <div>
+                  {/* Card Header */}
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center space-x-3">
+                      {/* Small Favicon logo */}
+                      {!hasLogoError ? (
+                        <img
+                          src={logoUrl}
+                          alt={`${report.companyName} logo`}
+                          onError={() => handleLogoError(report._id)}
+                          className="w-8 h-8 rounded-lg object-contain bg-[#1e293b] p-1 border border-[#334155]/50"
+                        />
+                      ) : (
+                        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center border border-blue-500/40 text-white font-extrabold text-xs">
+                          {report.ticker.substring(0, 2)}
+                        </div>
+                      )}
+                      <div>
+                        <div className="flex items-center space-x-2">
+                          <span className="bg-blue-600/10 text-blue-400 font-mono font-bold text-[10px] px-2 py-0.5 rounded border border-blue-500/20">
+                            {report.ticker}
+                          </span>
+                          <span className="text-[10px] text-slate-500 font-medium">
+                            {formatDatePolished(report.createdDate || report.createdAt)}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                    <span className={`text-[10px] px-2.5 py-0.5 rounded font-black tracking-wider uppercase ${getDecisionColor(report.recommendation)}`}>
+                      {(report.recommendation || 'PASS').replace('_', ' ')}
+                    </span>
+                  </div>
+
+                  <h4 className="text-slate-100 font-bold text-base mb-1">{report.companyName}</h4>
+                  <p className="text-xs text-slate-400 line-clamp-2 mb-4">{report.query}</p>
+                </div>
+
+                {/* Action Bar */}
+                <div className="flex items-center justify-between pt-4 border-t border-[#334155]/30">
+                  <div className="flex space-x-4 text-[11px] text-slate-400">
+                    <div>
+                      P/E: <span className="font-bold text-emerald-400">{report.financialData?.peRatio ? parseFloat(report.financialData.peRatio).toFixed(2) : 'N/A'}</span>
+                    </div>
+                    <div>
+                      Confidence: <span className="font-bold text-blue-400">{report.confidenceScore}%</span>
+                    </div>
+                  </div>
+
                   <div className="flex items-center space-x-2">
-                    <span className="bg-blue-600/10 text-blue-400 font-mono font-bold text-xs px-2.5 py-0.5 rounded border border-blue-500/20">
-                      {report.ticker}
-                    </span>
-                    <span className="text-xs text-slate-400 font-medium">
-                      {new Date(report.createdDate || report.searchDate).toLocaleDateString()}
-                    </span>
+                    <button
+                      onClick={() => onViewReport(report)}
+                      className="flex items-center space-x-1.5 bg-blue-600/10 hover:bg-blue-600 text-blue-400 hover:text-white px-3 py-1.5 rounded-lg text-xs font-semibold transition-all border border-blue-500/20"
+                    >
+                      <Eye className="w-3.5 h-3.5" />
+                      <span>View Dossier</span>
+                    </button>
                   </div>
-                  <span className={`text-[10px] px-2 py-0.5 rounded font-bold uppercase ${getDecisionColor(report.recommendation || report.investmentDecision)}`}>
-                    {(report.recommendation || report.investmentDecision || 'HOLD').replace('_', ' ')}
-                  </span>
                 </div>
 
-                <h4 className="text-slate-100 font-bold text-base mb-1">{report.companyName}</h4>
-                <p className="text-xs text-slate-400 line-clamp-2 mb-4">{report.query}</p>
               </div>
-
-              {/* Action Bar */}
-              <div className="flex items-center justify-between pt-4 border-t border-[#334155]/30">
-                <div className="flex space-x-4 text-[11px] text-slate-400">
-                  <div>
-                    P/E Ratio: <span className="font-bold text-emerald-400">{report.financialData?.peRatio || 'N/A'}</span>
-                  </div>
-                  <div>
-                    Confidence: <span className="font-bold text-blue-400">{report.confidenceScore}%</span>
-                  </div>
-                </div>
-
-                <div className="flex items-center space-x-2">
-                  <button
-                    onClick={() => onViewReport(report)}
-                    className="flex items-center space-x-1.5 bg-blue-600/10 hover:bg-blue-600 text-blue-400 hover:text-white px-3 py-1.5 rounded-lg text-xs font-semibold transition-all border border-blue-500/20"
-                  >
-                    <Eye className="w-3.5 h-3.5" />
-                    <span>View Dossier</span>
-                  </button>
-                </div>
-              </div>
-
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
 

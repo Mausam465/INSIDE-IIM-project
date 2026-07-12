@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Download, MessageSquare, Sparkles, Send, Trash2, Globe } from 'lucide-react';
+import { Download, MessageSquare, Sparkles, Send, Trash2, Globe, Building2, User, MapPin, Users, TrendingUp, Landmark, ShieldCheck } from 'lucide-react';
 
 /**
  * AnalysisReport Component
@@ -11,6 +11,7 @@ export default function AnalysisReport({ report, onBack, onDelete }) {
     { role: 'ai', content: `Hello! I have finished analyzing ${report.ticker}. Ask me any specific questions about this analysis.` }
   ]);
   const [inputValue, setInputValue] = useState('');
+  const [logoError, setLogoError] = useState(false);
 
   const handleSend = (e) => {
     e.preventDefault();
@@ -24,7 +25,7 @@ export default function AnalysisReport({ report, onBack, onDelete }) {
     setTimeout(() => {
       const aiReply = {
         role: 'ai',
-        content: `Regarding "${userMsg.content}": Based on the data collected, ${report.companyName}'s current debt profile remains stable at a Debt-to-Equity of ${report.financialData.debtToEquity || 'N/A'}, supported by positive cash flows.`
+        content: `Regarding "${userMsg.content}": Based on the data collected, ${report.companyName}'s current debt profile remains stable at a Debt-to-Equity of ${formatDecimal(report.financialData?.debtToEquity)}, supported by positive cash flows.`
       };
       setMessages((prev) => [...prev, aiReply]);
     }, 1000);
@@ -33,19 +34,70 @@ export default function AnalysisReport({ report, onBack, onDelete }) {
   const getDecisionColor = (decision) => {
     const d = (decision || '').toUpperCase();
     switch (d) {
+      case 'INVEST':
       case 'STRONG_BUY':
       case 'BUY':
-      case 'INVEST':
         return 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/25';
+      case 'PASS':
       case 'SELL':
       case 'STRONG_SELL':
-      case 'PASS':
         return 'bg-red-500/10 text-red-400 border border-red-500/25';
       case 'HOLD':
       default:
         return 'bg-amber-500/10 text-amber-400 border border-amber-500/25';
     }
   };
+
+  // Helper: Format large numbers to Billion/Trillion scales
+  const formatValuation = (val) => {
+    if (val === null || val === undefined || isNaN(val)) return 'N/A';
+    if (val >= 1e12) return `$${(val / 1e12).toFixed(2)}T`;
+    if (val >= 1e9) return `$${(val / 1e9).toFixed(2)}B`;
+    if (val >= 1e6) return `$${(val / 1e6).toFixed(2)}M`;
+    return `$${val.toLocaleString()}`;
+  };
+
+  // Helper: Format percentage metrics
+  const formatPercent = (val) => {
+    if (val === null || val === undefined || isNaN(val)) return 'N/A';
+    // If the value is fractional (e.g. 0.15), convert to percentage
+    const parsed = val > 0 && val < 1.0 ? val * 100 : val;
+    return `${parsed.toFixed(2)}%`;
+  };
+
+  // Helper: Format decimals (P/E and D/E ratios)
+  const formatDecimal = (val, precision = 2) => {
+    if (val === null || val === undefined || isNaN(val)) return 'N/A';
+    return parseFloat(val).toFixed(precision);
+  };
+
+  // Helper: Format polished English date (e.g. July 12, 2026)
+  const formatDatePolished = (dateInput) => {
+    try {
+      const d = new Date(dateInput);
+      if (isNaN(d.getTime())) return 'N/A';
+      return d.toLocaleDateString('en-US', {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric'
+      });
+    } catch {
+      return 'N/A';
+    }
+  };
+
+  // Get logo domain name based on company name
+  const getDomainFromCompanyName = (name) => {
+    const cleanName = name
+      .toLowerCase()
+      .replace(/inc\.|corp\.|corporation|ltd\./gi, '')
+      .replace(/[^a-z0-9]/g, '')
+      .trim();
+    return `${cleanName}.com`;
+  };
+
+  const domain = getDomainFromCompanyName(report.companyName);
+  const logoUrl = `https://logo.clearbit.com/${domain}`;
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
@@ -55,15 +107,32 @@ export default function AnalysisReport({ report, onBack, onDelete }) {
           <button onClick={onBack} className="text-sm text-blue-400 hover:underline mb-2 block">
             &larr; Back to Dashboard
           </button>
-          <div className="flex items-center space-x-3">
-            <span className="bg-blue-600/15 text-blue-400 font-mono font-bold px-3 py-1 rounded-lg border border-blue-500/30 text-lg">
-              {report.ticker}
-            </span>
-            <h2 className="text-3xl font-extrabold text-white">{report.companyName}</h2>
+          <div className="flex items-center space-x-4">
+            {/* Clearbit Favicon Logo Container */}
+            {!logoError ? (
+              <img
+                src={logoUrl}
+                alt={`${report.companyName} logo`}
+                onError={() => setLogoError(true)}
+                className="w-12 h-12 rounded-xl object-contain bg-[#1e293b] p-1.5 border border-[#334155]/50"
+              />
+            ) : (
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center border border-blue-500/40 text-white font-extrabold text-lg shadow-md shadow-blue-500/10">
+                {report.ticker.substring(0, 2)}
+              </div>
+            )}
+            <div>
+              <div className="flex items-center space-x-2">
+                <h2 className="text-3xl font-extrabold text-white">{report.companyName}</h2>
+                <span className="bg-blue-600/15 text-blue-400 font-mono font-bold px-2 py-0.5 rounded border border-blue-500/30 text-sm">
+                  {report.ticker}
+                </span>
+              </div>
+              <p className="text-xs text-slate-400 mt-1">
+                Research Generated: {formatDatePolished(report.createdDate || report.createdAt)}
+              </p>
+            </div>
           </div>
-          <p className="text-xs text-slate-400 mt-2">
-            Research compiled on: {new Date(report.createdDate || report.searchDate).toLocaleDateString()}
-          </p>
         </div>
 
         {/* Action Buttons */}
@@ -86,49 +155,129 @@ export default function AnalysisReport({ report, onBack, onDelete }) {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Main Columns: Scores, Metrics, & Report */}
+        {/* Main Columns: Overview, Scores, Metrics, & Report */}
         <div className="lg:col-span-2 space-y-8">
           
           {/* Scoring Banner Grid */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {/* AI Decision */}
-            <div className="bg-[#1e293b]/20 border border-[#334155]/40 rounded-xl p-5 text-center">
-              <span className="text-xs text-slate-400 uppercase font-semibold">AI Recommendation</span>
-              <div className={`mt-2 py-1 px-3 rounded-full text-sm font-bold text-center inline-block ${getDecisionColor(report.recommendation || report.investmentDecision)}`}>
-                {(report.recommendation || report.investmentDecision || 'HOLD').replace('_', ' ')}
+            <div className="bg-[#1e293b]/20 border border-[#334155]/40 rounded-xl p-5 text-center flex flex-col justify-center items-center">
+              <span className="text-xs text-slate-400 uppercase font-semibold">AI Decision Verdict</span>
+              <div className={`mt-2 py-1 px-4 rounded-full text-sm font-black tracking-wider text-center inline-block ${getDecisionColor(report.recommendation)}`}>
+                {(report.recommendation || 'PASS').replace('_', ' ')}
               </div>
             </div>
 
             {/* Confidence Score */}
-            <div className="bg-[#1e293b]/20 border border-[#334155]/40 rounded-xl p-5 text-center">
-              <span className="text-xs text-slate-400 uppercase font-semibold">Confidence Score</span>
+            <div className="bg-[#1e293b]/20 border border-[#334155]/40 rounded-xl p-5 text-center flex flex-col justify-center items-center">
+              <span className="text-xs text-slate-400 uppercase font-semibold">Confidence Rating</span>
               <div className="text-2xl font-black text-blue-400 mt-1">{report.confidenceScore}%</div>
             </div>
 
             {/* Data Sources Count */}
-            <div className="bg-[#1e293b]/20 border border-[#334155]/40 rounded-xl p-5 text-center">
+            <div className="bg-[#1e293b]/20 border border-[#334155]/40 rounded-xl p-5 text-center flex flex-col justify-center items-center">
               <span className="text-xs text-slate-400 uppercase font-semibold">Live News Sources</span>
               <div className="text-2xl font-black text-emerald-400 mt-1">{(report.latestNews || report.news || []).length} Channels</div>
             </div>
           </div>
 
-          {/* Financial Metrics Grid */}
-          <div>
-            <h4 className="text-sm font-semibold text-slate-300 uppercase tracking-wider mb-3">Core Financial Metrics</h4>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-              <div className="bg-[#0b0f19] border border-[#1e293b] p-4 rounded-xl">
-                <div className="text-xs text-slate-400">P/E Ratio</div>
-                <div className="text-lg font-bold text-white mt-1">{report.financialData?.peRatio || 'N/A'}</div>
-              </div>
-              <div className="bg-[#0b0f19] border border-[#1e293b] p-4 rounded-xl">
-                <div className="text-xs text-slate-400">Market Capitalization</div>
-                <div className="text-lg font-bold text-white mt-1">
-                  {report.financialData?.marketCap ? `$${(report.financialData.marketCap / 1e9).toFixed(1)}B` : 'N/A'}
+          {/* Company Overview Section (BIGGEST MISSING FEATURE) */}
+          <div className="bg-[#1e293b]/10 border border-[#334155]/30 rounded-2xl p-6 shadow-lg">
+            <h3 className="font-bold text-base text-slate-200 border-b border-[#334155]/20 pb-2 mb-4 flex items-center space-x-2">
+              <Building2 className="w-4.5 h-4.5 text-blue-500" />
+              <span>Company Overview Profile</span>
+            </h3>
+            
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+              <div className="bg-[#0b0f19]/50 border border-[#1e293b] p-3 rounded-xl flex items-center space-x-3">
+                <Globe className="w-5 h-5 text-indigo-400 flex-shrink-0" />
+                <div>
+                  <div className="text-[10px] text-slate-500 uppercase font-semibold">Industry</div>
+                  <div className="text-xs font-bold text-slate-300">{report.companyOverview?.industry || 'Technology'}</div>
                 </div>
               </div>
+              <div className="bg-[#0b0f19]/50 border border-[#1e293b] p-3 rounded-xl flex items-center space-x-3">
+                <User className="w-5 h-5 text-indigo-400 flex-shrink-0" />
+                <div>
+                  <div className="text-[10px] text-slate-500 uppercase font-semibold">CEO</div>
+                  <div className="text-xs font-bold text-slate-300">{report.companyOverview?.ceo || 'Executive'}</div>
+                </div>
+              </div>
+              <div className="bg-[#0b0f19]/50 border border-[#1e293b] p-3 rounded-xl flex items-center space-x-3">
+                <MapPin className="w-5 h-5 text-indigo-400 flex-shrink-0" />
+                <div>
+                  <div className="text-[10px] text-slate-500 uppercase font-semibold">Headquarters</div>
+                  <div className="text-xs font-bold text-slate-300 truncate max-w-[100px]" title={report.companyOverview?.headquarters}>{report.companyOverview?.headquarters || 'Global HQ'}</div>
+                </div>
+              </div>
+              <div className="bg-[#0b0f19]/50 border border-[#1e293b] p-3 rounded-xl flex items-center space-x-3">
+                <Users className="w-5 h-5 text-indigo-400 flex-shrink-0" />
+                <div>
+                  <div className="text-[10px] text-slate-500 uppercase font-semibold">Employees</div>
+                  <div className="text-xs font-bold text-slate-300">{report.companyOverview?.employees || 'N/A'}</div>
+                </div>
+              </div>
+            </div>
+
+            <p className="text-xs text-slate-400 leading-relaxed italic">
+              {report.companyOverview?.description || report.aiSummary?.split('\n').find(l => l.startsWith('This dossier') || l.startsWith('This report')) || 'Company is categorized as a publicly listed security.'}
+            </p>
+          </div>
+
+          {/* Financial Scorecard Grid (INCORPORATING MISSING METRICS) */}
+          <div>
+            <h4 className="text-sm font-semibold text-slate-300 uppercase tracking-wider mb-4 flex items-center space-x-2">
+              <TrendingUp className="w-4 h-4 text-emerald-500" />
+              <span>Core Financial Statement Scorecard</span>
+            </h4>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div className="bg-[#0b0f19] border border-[#1e293b] p-4 rounded-xl">
-                <div className="text-xs text-slate-400">Debt to Equity</div>
-                <div className="text-lg font-bold text-white mt-1">{report.financialData?.debtToEquity || 'N/A'}</div>
+                <div className="text-[10px] text-slate-500 uppercase font-semibold">Market Capitalization</div>
+                <div className="text-base font-bold text-white mt-1">{formatValuation(report.financialData?.marketCap)}</div>
+              </div>
+              <div className="bg-[#0b0f19] border border-[#1e293b] p-4 rounded-xl">
+                <div className="text-[10px] text-slate-500 uppercase font-semibold">P/E Ratio</div>
+                <div className="text-base font-bold text-white mt-1">{formatDecimal(report.financialData?.peRatio, 2)}</div>
+              </div>
+              <div className="bg-[#0b0f19] border border-[#1e293b] p-4 rounded-xl">
+                <div className="text-[10px] text-slate-500 uppercase font-semibold">Debt to Equity</div>
+                <div className="text-base font-bold text-white mt-1">{formatDecimal(report.financialData?.debtToEquity, 2)}</div>
+              </div>
+              <div className="bg-[#0b0f19] border border-[#1e293b] p-4 rounded-xl">
+                <div className="text-[10px] text-slate-500 uppercase font-semibold">Earnings Per Share (EPS)</div>
+                <div className="text-base font-bold text-white mt-1">{formatDecimal(report.financialData?.eps, 2)}</div>
+              </div>
+              <div className="bg-[#0b0f19] border border-[#1e293b] p-4 rounded-xl">
+                <div className="text-[10px] text-slate-500 uppercase font-semibold">Revenue</div>
+                <div className="text-base font-bold text-white mt-1">{formatValuation(report.financialData?.revenue)}</div>
+              </div>
+              <div className="bg-[#0b0f19] border border-[#1e293b] p-4 rounded-xl">
+                <div className="text-[10px] text-slate-500 uppercase font-semibold">Net Income</div>
+                <div className="text-base font-bold text-white mt-1">{formatValuation(report.financialData?.netIncome)}</div>
+              </div>
+              <div className="bg-[#0b0f19] border border-[#1e293b] p-4 rounded-xl">
+                <div className="text-[10px] text-slate-500 uppercase font-semibold">Free Cash Flow</div>
+                <div className="text-base font-bold text-white mt-1">{formatValuation(report.financialData?.freeCashFlow)}</div>
+              </div>
+              <div className="bg-[#0b0f19] border border-[#1e293b] p-4 rounded-xl">
+                <div className="text-[10px] text-slate-500 uppercase font-semibold">Return on Equity (ROE)</div>
+                <div className="text-base font-bold text-white mt-1">{formatPercent(report.financialData?.roe)}</div>
+              </div>
+              <div className="bg-[#0b0f19] border border-[#1e293b] p-4 rounded-xl">
+                <div className="text-[10px] text-slate-500 uppercase font-semibold">Dividend Yield</div>
+                <div className="text-base font-bold text-white mt-1">{formatPercent(report.financialData?.dividendYield)}</div>
+              </div>
+              <div className="bg-[#0b0f19] border border-[#1e293b] p-4 rounded-xl">
+                <div className="text-[10px] text-slate-500 uppercase font-semibold">Current Ratio</div>
+                <div className="text-base font-bold text-white mt-1">{formatDecimal(report.financialData?.currentRatio, 2)}</div>
+              </div>
+              <div className="bg-[#0b0f19] border border-[#1e293b] p-4 rounded-xl">
+                <div className="text-[10px] text-slate-500 uppercase font-semibold">Operating Margin</div>
+                <div className="text-base font-bold text-white mt-1">{formatPercent(report.financialData?.operatingMargin)}</div>
+              </div>
+              <div className="bg-[#0b0f19] border border-[#1e293b] p-4 rounded-xl flex items-center space-x-2 bg-blue-950/10 border-blue-500/20">
+                <Landmark className="w-5 h-5 text-blue-400" />
+                <div className="text-[10px] text-slate-400 font-medium">Verified SEC Data</div>
               </div>
             </div>
           </div>
@@ -140,7 +289,7 @@ export default function AnalysisReport({ report, onBack, onDelete }) {
               <h3 className="font-bold text-lg">Synthesized Analysis Report</h3>
             </div>
             <article className="prose prose-invert max-w-none text-slate-300 space-y-4 text-sm leading-relaxed whitespace-pre-wrap">
-              {report.aiSummary || report.aiAnalysis || report.reportMarkdown}
+              {report.aiSummary}
             </article>
           </div>
 

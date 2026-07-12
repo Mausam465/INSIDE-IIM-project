@@ -55,6 +55,7 @@ export const generateReport = async (req, res) => {
     const reportData = {
       ticker: resolvedTicker.toUpperCase().trim(),
       companyName: resolvedName,
+      companyOverview: financials.profile,
       financialData: financials.metrics,
       latestNews: dbNews,
       aiSummary: analysis.aiSummary,
@@ -63,6 +64,7 @@ export const generateReport = async (req, res) => {
       recommendation: analysis.recommendation, // strictly 'INVEST' or 'PASS'
       confidenceScore: analysis.confidenceScore
     };
+
 
     const report = await reportService.saveReport(req.user._id, reportData);
 

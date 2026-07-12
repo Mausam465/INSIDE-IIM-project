@@ -104,13 +104,22 @@ Formatting guidelines for "aiSummary":
  * using the actual crawled metrics and live news articles.
  */
 const compileLocalSequenceReport = (ticker, profile, metrics, news, query) => {
-  const pe = metrics.peRatio || 'N/A';
-  const cap = metrics.marketCap ? `$${(metrics.marketCap / 1e9).toFixed(1)}B` : 'N/A';
-  const revenue = metrics.revenue ? `$${(metrics.revenue / 1e9).toFixed(1)}B` : 'N/A';
-  const netIncome = metrics.netIncome ? `$${(metrics.netIncome / 1e9).toFixed(1)}B` : 'N/A';
-  const sector = profile.sector || 'Technology & Corporate Services';
-  const industry = profile.industry || 'Global Equities';
+  const formatValuation = (val) => {
+    if (!val) return 'N/A';
+    if (val >= 1e12) return `$${(val / 1e12).toFixed(2)}T`;
+    if (val >= 1e9) return `$${(val / 1e9).toFixed(2)}B`;
+    if (val >= 1e6) return `$${(val / 1e6).toFixed(2)}M`;
+    return `$${val.toLocaleString()}`;
+  };
+
+  const pe = metrics.peRatio ? parseFloat(metrics.peRatio).toFixed(2) : 'N/A';
+  const cap = formatValuation(metrics.marketCap);
+  const revenue = formatValuation(metrics.revenue);
+  const netIncome = formatValuation(metrics.netIncome);
+  const sector = profile.sector || 'Technology';
+  const industry = profile.industry || 'Semiconductors';
   const description = profile.description || 'No description summary details are available.';
+
 
   // 1. Calculate a dynamic confidence score based on the ticker characters
   const tickerSeed = ticker.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);

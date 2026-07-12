@@ -17,19 +17,32 @@ const reportSchema = new mongoose.Schema({
     required: true,
     trim: true
   },
+  companyOverview: {
+    industry: { type: String, default: 'General Sector' },
+    sector: { type: String, default: 'Global Market' },
+    ceo: { type: String, default: 'Executive Management' },
+    headquarters: { type: String, default: 'Global HQ' },
+    employees: { type: String, default: 'N/A' },
+    description: { type: String, default: '' }
+  },
   financialData: {
     peRatio: { type: Number },
     marketCap: { type: Number },
     debtToEquity: { type: Number },
+    eps: { type: Number },
     revenue: { type: Number },
     netIncome: { type: Number },
-    freeCashFlow: { type: Number }
+    freeCashFlow: { type: Number },
+    roe: { type: Number },              // Return on Equity
+    dividendYield: { type: Number },     // Dividend Yield (in percentage or fraction)
+    currentRatio: { type: Number },      // Current Ratio
+    operatingMargin: { type: Number }    // Operating Margin (in percentage or fraction)
   },
   latestNews: [
     {
       headline: { type: String, required: true },
       source: { type: String, required: true },
-      url: { type: String, required: true }
+      url: { type: String, default: '#' }
     }
   ],
   aiSummary: {
