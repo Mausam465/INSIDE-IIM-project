@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, Eye, TrendingUp, AlertCircle, FileText } from 'lucide-react';
+import { Search, Eye, FileText } from 'lucide-react';
 
 /**
  * History Component
@@ -15,12 +15,15 @@ export default function History({ reports, onViewReport, onDeleteReport }) {
   );
 
   const getDecisionColor = (decision) => {
-    switch (decision) {
+    const d = (decision || '').toUpperCase();
+    switch (d) {
       case 'STRONG_BUY':
       case 'BUY':
+      case 'INVEST':
         return 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/25';
       case 'SELL':
       case 'STRONG_SELL':
+      case 'PASS':
         return 'bg-red-500/10 text-red-400 border border-red-500/25';
       case 'HOLD':
       default:
@@ -77,11 +80,11 @@ export default function History({ reports, onViewReport, onDeleteReport }) {
                       {report.ticker}
                     </span>
                     <span className="text-xs text-slate-400 font-medium">
-                      {new Date(report.searchDate).toLocaleDateString()}
+                      {new Date(report.createdDate || report.searchDate).toLocaleDateString()}
                     </span>
                   </div>
-                  <span className={`text-[10px] px-2 py-0.5 rounded font-bold uppercase ${getDecisionColor(report.investmentDecision)}`}>
-                    {report.investmentDecision.replace('_', ' ')}
+                  <span className={`text-[10px] px-2 py-0.5 rounded font-bold uppercase ${getDecisionColor(report.recommendation || report.investmentDecision)}`}>
+                    {(report.recommendation || report.investmentDecision || 'HOLD').replace('_', ' ')}
                   </span>
                 </div>
 
@@ -93,7 +96,7 @@ export default function History({ reports, onViewReport, onDeleteReport }) {
               <div className="flex items-center justify-between pt-4 border-t border-[#334155]/30">
                 <div className="flex space-x-4 text-[11px] text-slate-400">
                   <div>
-                    Sentiment: <span className="font-bold text-emerald-400">{(report.sentimentScore * 100).toFixed(0)}%</span>
+                    P/E Ratio: <span className="font-bold text-emerald-400">{report.financialData?.peRatio || 'N/A'}</span>
                   </div>
                   <div>
                     Confidence: <span className="font-bold text-blue-400">{report.confidenceScore}%</span>

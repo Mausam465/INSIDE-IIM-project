@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Download, MessageSquare, ThumbsUp, ShieldAlert, Sparkles, Send, Trash2 } from 'lucide-react';
+import { Download, MessageSquare, Sparkles, Send, Trash2, Globe } from 'lucide-react';
 
 /**
  * AnalysisReport Component
@@ -16,12 +16,11 @@ export default function AnalysisReport({ report, onBack, onDelete }) {
     e.preventDefault();
     if (!inputValue.trim()) return;
 
-    // Add user message
     const userMsg = { role: 'user', content: inputValue.trim() };
     setMessages((prev) => [...prev, userMsg]);
     setInputValue('');
 
-    // Simulate AI response response (conversational API call placeholder)
+    // Simulate AI response
     setTimeout(() => {
       const aiReply = {
         role: 'ai',
@@ -32,12 +31,15 @@ export default function AnalysisReport({ report, onBack, onDelete }) {
   };
 
   const getDecisionColor = (decision) => {
-    switch (decision) {
+    const d = (decision || '').toUpperCase();
+    switch (d) {
       case 'STRONG_BUY':
       case 'BUY':
+      case 'INVEST':
         return 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/25';
       case 'SELL':
       case 'STRONG_SELL':
+      case 'PASS':
         return 'bg-red-500/10 text-red-400 border border-red-500/25';
       case 'HOLD':
       default:
@@ -60,7 +62,7 @@ export default function AnalysisReport({ report, onBack, onDelete }) {
             <h2 className="text-3xl font-extrabold text-white">{report.companyName}</h2>
           </div>
           <p className="text-xs text-slate-400 mt-2">
-            Research compiled on: {new Date(report.searchDate).toLocaleDateString()}
+            Research compiled on: {new Date(report.createdDate || report.searchDate).toLocaleDateString()}
           </p>
         </div>
 
@@ -92,8 +94,8 @@ export default function AnalysisReport({ report, onBack, onDelete }) {
             {/* AI Decision */}
             <div className="bg-[#1e293b]/20 border border-[#334155]/40 rounded-xl p-5 text-center">
               <span className="text-xs text-slate-400 uppercase font-semibold">AI Recommendation</span>
-              <div className={`mt-2 py-1 px-3 rounded-full text-sm font-bold text-center inline-block ${getDecisionColor(report.investmentDecision)}`}>
-                {report.investmentDecision.replace('_', ' ')}
+              <div className={`mt-2 py-1 px-3 rounded-full text-sm font-bold text-center inline-block ${getDecisionColor(report.recommendation || report.investmentDecision)}`}>
+                {(report.recommendation || report.investmentDecision || 'HOLD').replace('_', ' ')}
               </div>
             </div>
 
@@ -103,10 +105,10 @@ export default function AnalysisReport({ report, onBack, onDelete }) {
               <div className="text-2xl font-black text-blue-400 mt-1">{report.confidenceScore}%</div>
             </div>
 
-            {/* Sentiment Score */}
+            {/* Data Sources Count */}
             <div className="bg-[#1e293b]/20 border border-[#334155]/40 rounded-xl p-5 text-center">
-              <span className="text-xs text-slate-400 uppercase font-semibold">Sentiment Score</span>
-              <div className="text-2xl font-black text-emerald-400 mt-1">{(report.sentimentScore * 100).toFixed(0)}%</div>
+              <span className="text-xs text-slate-400 uppercase font-semibold">Live News Sources</span>
+              <div className="text-2xl font-black text-emerald-400 mt-1">{(report.latestNews || report.news || []).length} Channels</div>
             </div>
           </div>
 
@@ -116,17 +118,17 @@ export default function AnalysisReport({ report, onBack, onDelete }) {
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
               <div className="bg-[#0b0f19] border border-[#1e293b] p-4 rounded-xl">
                 <div className="text-xs text-slate-400">P/E Ratio</div>
-                <div className="text-lg font-bold text-white mt-1">{report.financialData.peRatio || 'N/A'}</div>
+                <div className="text-lg font-bold text-white mt-1">{report.financialData?.peRatio || 'N/A'}</div>
               </div>
               <div className="bg-[#0b0f19] border border-[#1e293b] p-4 rounded-xl">
                 <div className="text-xs text-slate-400">Market Capitalization</div>
                 <div className="text-lg font-bold text-white mt-1">
-                  {report.financialData.marketCap ? `$${(report.financialData.marketCap / 1e9).toFixed(1)}B` : 'N/A'}
+                  {report.financialData?.marketCap ? `$${(report.financialData.marketCap / 1e9).toFixed(1)}B` : 'N/A'}
                 </div>
               </div>
               <div className="bg-[#0b0f19] border border-[#1e293b] p-4 rounded-xl">
                 <div className="text-xs text-slate-400">Debt to Equity</div>
-                <div className="text-lg font-bold text-white mt-1">{report.financialData.debtToEquity || 'N/A'}</div>
+                <div className="text-lg font-bold text-white mt-1">{report.financialData?.debtToEquity || 'N/A'}</div>
               </div>
             </div>
           </div>
@@ -138,7 +140,7 @@ export default function AnalysisReport({ report, onBack, onDelete }) {
               <h3 className="font-bold text-lg">Synthesized Analysis Report</h3>
             </div>
             <article className="prose prose-invert max-w-none text-slate-300 space-y-4 text-sm leading-relaxed whitespace-pre-wrap">
-              {report.reportMarkdown}
+              {report.aiSummary || report.aiAnalysis || report.reportMarkdown}
             </article>
           </div>
 
@@ -186,29 +188,22 @@ export default function AnalysisReport({ report, onBack, onDelete }) {
           <div>
             <h4 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">Aggregated News Context</h4>
             <div className="space-y-3">
-              {report.news && report.news.map((item, idx) => (
+              {(report.latestNews || report.news || []).map((item, idx) => (
                 <div key={idx} className="bg-[#0b0f19] border border-[#1e293b] p-4 rounded-xl text-xs space-y-2">
                   <div className="flex items-center justify-between">
                     <span className="text-[10px] text-slate-500 font-medium">{item.source}</span>
-                    <span className={`text-[9px] px-2 py-0.5 rounded font-bold ${
-                      item.sentiment === 'POSITIVE'
-                        ? 'bg-emerald-500/10 text-emerald-400'
-                        : item.sentiment === 'NEGATIVE'
-                        ? 'bg-red-500/10 text-red-400'
-                        : 'bg-slate-500/10 text-slate-400'
-                    }`}>
-                      {item.sentiment}
-                    </span>
                   </div>
                   <h5 className="font-semibold text-slate-200 line-clamp-2">{item.headline}</h5>
-                  <a
-                    href={item.url}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="text-blue-400 hover:underline block text-[10px]"
-                  >
-                    Read article &rarr;
-                  </a>
+                  {item.url && item.url !== '#' && (
+                    <a
+                      href={item.url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-blue-400 hover:underline block text-[10px]"
+                    >
+                      Read article &rarr;
+                    </a>
+                  )}
                 </div>
               ))}
             </div>

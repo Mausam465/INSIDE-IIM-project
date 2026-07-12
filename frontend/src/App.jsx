@@ -15,14 +15,19 @@ export default function App() {
   const [activeQuery, setActiveQuery] = useState('');
   const [token, setToken] = useState(localStorage.getItem('token') || '');
 
-  // React Concept: useEffect for Initial Component Mount
+  // Helper to clear token on authentication failure
+  const handleAuthError = () => {
+    localStorage.removeItem('token');
+    setToken('');
+  };
+
   // Automatically registers a default analyst profile to acquire a token if none is present.
   useEffect(() => {
     const acquireDefaultToken = async () => {
       if (token) return;
 
       try {
-        const email = `analyst_${Math.floor(Math.random() * 1000)}@insideiim.com`;
+        const email = `analyst_${Math.floor(Math.random() * 100000)}@insideiim.com`;
         const res = await fetch(`${API_BASE_URL}/auth/register`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -48,6 +53,12 @@ export default function App() {
       const res = await fetch(`${API_BASE_URL}/reports`, {
         headers: { Authorization: `Bearer ${token}` }
       });
+      
+      if (res.status === 401) {
+        handleAuthError();
+        return;
+      }
+
       const data = await res.json();
       if (Array.isArray(data)) {
         setReports(data);
@@ -82,6 +93,12 @@ export default function App() {
           },
           body: JSON.stringify({ ticker: tickerToAnalyze, query: activeQuery })
         });
+
+        if (res.status === 401) {
+          handleAuthError();
+          throw new Error('Authentication expired');
+        }
+
         const newReport = await res.json();
         if (newReport && newReport._id) {
           setReports((prev) => [newReport, ...prev]);
@@ -98,18 +115,17 @@ export default function App() {
     const fallbackReport = {
       _id: `mock_${Date.now()}`,
       ticker: tickerToAnalyze,
-      companyName: tickerToAnalyze === 'AAPL' ? 'Apple Inc.' : tickerToAnalyze === 'TSLA' ? 'Tesla Motors' : 'Synthesized Target Corp',
+      companyName: tickerToAnalyze === 'AAPL' ? 'Apple Inc.' : tickerToAnalyze === 'TSLA' ? 'Tesla Motors' : `${tickerToAnalyze} Corporation`,
       query: activeQuery,
-      summary: 'Fallback mock report summary',
       financialData: { peRatio: 30.2, marketCap: 180000000000, debtToEquity: 0.8 },
-      news: [
-        { headline: 'Market optimistic on product expansion plans', source: 'Financial Times', url: '#', sentiment: 'POSITIVE' },
-        { headline: 'Supply chain headwinds signal Q4 concerns', source: 'Bloomberg', url: '#', sentiment: 'NEGATIVE' }
+      latestNews: [
+        { headline: 'Market optimistic on product expansion plans', source: 'Financial Times', url: '#' },
+        { headline: 'Supply chain headwinds signal Q4 concerns', source: 'Bloomberg', url: '#' }
       ],
-      aiAnalysis: `# Analysis Report: ${tickerToAnalyze}\n\n*Note: Running in offline fallback mode.*\n\n### Overview\nThe asset is showing strong support lines around key levels...`,
-      investmentDecision: 'BUY',
+      aiSummary: `# Analysis Report: ${tickerToAnalyze}\n\n*Note: Running in offline fallback mode.*\n\n### Overview\nThe asset is showing strong support lines around key levels...`,
+      recommendation: 'BUY',
       confidenceScore: 82,
-      searchDate: new Date().toISOString()
+      createdDate: new Date().toISOString()
     };
 
     setReports((prev) => [fallbackReport, ...prev]);
