@@ -12,7 +12,7 @@ const getGeminiModel = () => {
     if (apiKey && apiKey !== 'your_gemini_api_key_here') {
       model = new ChatGoogleGenerativeAI({
         apiKey: apiKey,
-        modelName: 'gemini-1.5-flash',
+        model: 'gemini-2.0-flash',
         temperature: 0.2,
         modelKwargs: {
           responseMimeType: 'application/json'
@@ -22,6 +22,10 @@ const getGeminiModel = () => {
   }
   return model;
 };
+
+
+
+
 
 /**
  * Executes a LangChain RunnableSequence to synthesize stock research.

@@ -3,8 +3,8 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 /**
  * Finance Service
  * Fetches company profile and detailed financial statement metrics.
- * Uses Tavily Search + regex parser fallback to extract real-time financial metrics for any ticker,
- * ensuring authentic data even if Gemini keys fail.
+ * Uses Tavily Search + robust substring extractor to capture real-time financial metrics,
+ * shielding the client from Google Gemini 429 quota limits.
  */
 
 // Helper: sleep utility
@@ -42,76 +42,137 @@ const searchTavily = async (ticker) => {
 };
 
 /**
- * Regex parser to extract numbers from Tavily search text if Gemini fails
+ * Index-based window extractor to parse financial numbers from Tavily search text if Gemini fails.
+ * Designed to resist year tokens and extract actual scaled figures.
  */
 const parseFinancialsWithRegex = (ticker, text) => {
-  console.log(`Parsing real-time search context using regex fallback for ${ticker}...`);
+  console.log(`Parsing real-time search context using window extractor for ${ticker}...`);
 
-  // Helper to parse financial suffixes like B (billion) or T (trillion)
-  const parseValuation = (regexes) => {
-    for (const regex of regexes) {
-      const match = text.match(regex);
-      if (match && match[1]) {
-        let value = parseFloat(match[1].replace(/,/g, ''));
-        const suffix = (match[2] || '').toUpperCase();
-        if (suffix === 'T') value *= 1e12;
-        else if (suffix === 'B' || suffix === 'BILLION') value *= 1e9;
-        else if (suffix === 'M' || suffix === 'MILLION') value *= 1e6;
-        return Math.round(value);
+  // Default fallbacks
+  let companyName = `${ticker.toUpperCase()} Corporation`;
+  let peRatio = 25.0;
+  let marketCap = 150000000000;
+  let eps = 3.5;
+  let revenue = 18000000000;
+  let netIncome = 2700000000;
+  let debtToEquity = 1.1;
+
+  const textLower = text.toLowerCase();
+
+  // Try to parse Market Cap
+  const mcIndex = textLower.indexOf('market cap');
+  if (mcIndex !== -1) {
+    const windowText = text.substring(Math.max(0, mcIndex - 50), Math.min(text.length, mcIndex + 150));
+    const match = windowText.match(/\$?\s*([\d\.,]+)\s*(trillion|billion|million|t|b|m)/i);
+    if (match) {
+      let val = parseFloat(match[1].replace(/,/g, ''));
+      const unit = match[2].toLowerCase();
+      if (unit.startsWith('t')) marketCap = val * 1e12;
+      else if (unit.startsWith('b')) marketCap = val * 1e9;
+      else if (unit.startsWith('m')) marketCap = val * 1e6;
+    }
+  }
+
+  // Try to parse PE Ratio
+  const peIndex = textLower.indexOf('p/e ratio') !== -1 ? textLower.indexOf('p/e ratio') : textLower.indexOf('pe ratio');
+  if (peIndex !== -1) {
+    const windowText = text.substring(Math.max(0, peIndex - 50), Math.min(text.length, peIndex + 150));
+    const matches = windowText.match(/[\d\.]+/g);
+    if (matches) {
+      for (const m of matches) {
+        const val = parseFloat(m);
+        // Exclude common calendar years (2020 - 2030)
+        if (val > 2.0 && val < 150.0 && val !== 2026 && val !== 2025 && val !== 2024 && val !== 2023) {
+          peRatio = val;
+          break;
+        }
       }
     }
-    return null;
-  };
-
-  const marketCap = parseValuation([
-    /market\s*cap(?:italization)?(?:\s*is)?\s*(?:around|approx|of)?\s*\$?([\d\.,]+)\s*(t|b|m|billion|trillion|million)?/i,
-    /val[ua]t[io]n(?:\s*is)?\s*\$?([\d\.,]+)\s*(t|b|m|billion|trillion|million)?/i,
-    /\$?([\d\.,]+)\s*(t|b|billion|trillion)\s*market\s*cap/i
-  ]) || 150000000000; // Default fallback if not found
-
-  // Parse P/E (ignoring common years like 2023, 2024, 2025, 2026)
-  let peRatio = null;
-  const peMatches = text.match(/p\/e\s*(?:ratio|multiple)?(?:\s*is)?\s*([\d\.]+)/i) || 
-                    text.match(/pe\s*(?:ratio)?(?:\s*is)?\s*([\d\.]+)/i) ||
-                    text.match(/price[- ]to[- ]earnings(?:\s*is)?\s*([\d\.]+)/i);
-  if (peMatches && peMatches[1]) {
-    const val = parseFloat(peMatches[1]);
-    peRatio = (val > 0 && val < 500) ? val : 25.0;
-  } else {
-    peRatio = 25.0; // Default fallback
   }
 
-
-  // Parse EPS
-  let eps = null;
-  const epsMatches = text.match(/eps(?:\s*is)?\s*([\d\.-]+)/i) || text.match(/earnings\s*per\s*share(?:\s*is)?\s*([\d\.-]+)/i);
-  if (epsMatches && epsMatches[1]) {
-    eps = parseFloat(epsMatches[1]);
-  } else {
-    eps = 3.5;
+  // Try to parse EPS
+  const epsIndex = textLower.indexOf('eps') !== -1 ? textLower.indexOf('eps') : textLower.indexOf('earnings per share');
+  if (epsIndex !== -1) {
+    const windowText = text.substring(Math.max(0, epsIndex - 50), Math.min(text.length, epsIndex + 150));
+    const matches = windowText.match(/[\d\.-]+/g);
+    if (matches) {
+      for (const m of matches) {
+        const val = parseFloat(m);
+        if (val > -10.0 && val < 50.0 && val !== 2026 && val !== 2025 && val !== 2024 && val !== 2023) {
+          eps = val;
+          break;
+        }
+      }
+    }
   }
 
-  // Parse Revenue
-  const revenue = parseValuation([
-    /revenue(?:\s*is|of)?\s*\$?([\d\.,]+)\s*(t|b|m|billion|trillion|million)?/i,
-    /sales(?:\s*is|of)?\s*\$?([\d\.,]+)\s*(t|b|m|billion|trillion|million)?/i
-  ]) || Math.round(marketCap * 0.12);
+  // Try to parse Revenue
+  const revIndex = textLower.indexOf('revenue') !== -1 ? textLower.indexOf('revenue') : textLower.indexOf('sales');
+  if (revIndex !== -1) {
+    const windowText = text.substring(Math.max(0, revIndex - 50), Math.min(text.length, revIndex + 150));
+    const match = windowText.match(/\$?\s*([\d\.,]+)\s*(trillion|billion|million|t|b|m)/i);
+    if (match) {
+      let val = parseFloat(match[1].replace(/,/g, ''));
+      const unit = match[2].toLowerCase();
+      if (unit.startsWith('t')) revenue = val * 1e12;
+      else if (unit.startsWith('b')) revenue = val * 1e9;
+      else if (unit.startsWith('m')) revenue = val * 1e6;
+    } else {
+      revenue = Math.round(marketCap * 0.12);
+    }
+  } else {
+    revenue = Math.round(marketCap * 0.12);
+  }
 
-  // Parse Net Income
-  const netIncome = parseValuation([
-    /net\s*income(?:\s*is|of)?\s*\$?([\d\.,]+)\s*(t|b|m|billion|trillion|million)?/i,
-    /profit(?:\s*is|of)?\s*\$?([\d\.,]+)\s*(t|b|m|billion|trillion|million)?/i
-  ]) || Math.round(revenue * 0.15);
+  // Try to parse Net Income
+  const niIndex = textLower.indexOf('net income') !== -1 ? textLower.indexOf('net income') : textLower.indexOf('net profit');
+  if (niIndex !== -1) {
+    const windowText = text.substring(Math.max(0, niIndex - 50), Math.min(text.length, niIndex + 150));
+    const match = windowText.match(/\$?\s*([\d\.,]+)\s*(trillion|billion|million|t|b|m)/i);
+    if (match) {
+      let val = parseFloat(match[1].replace(/,/g, ''));
+      const unit = match[2].toLowerCase();
+      if (unit.startsWith('t')) netIncome = val * 1e12;
+      else if (unit.startsWith('b')) netIncome = val * 1e9;
+      else if (unit.startsWith('m')) netIncome = val * 1e6;
+    } else {
+      netIncome = Math.round(revenue * 0.15);
+    }
+  } else {
+    netIncome = Math.round(revenue * 0.15);
+  }
+
+  // Try to parse Debt to Equity
+  const deIndex = textLower.indexOf('debt to equity') !== -1 ? textLower.indexOf('debt to equity') : textLower.indexOf('d/e ratio');
+  if (deIndex !== -1) {
+    const windowText = text.substring(Math.max(0, deIndex - 50), Math.min(text.length, deIndex + 150));
+    const matches = windowText.match(/[\d\.]+/g);
+    if (matches) {
+      for (const m of matches) {
+        const val = parseFloat(m);
+        if (val > 0.05 && val < 8.0) {
+          debtToEquity = val;
+          break;
+        }
+      }
+    }
+  }
+
+  // Try to parse Company Name
+  const nameMatches = text.match(/([A-Z][a-zA-Z0-9&\.\s]{2,25}\s(Inc\.|Corp\.|Corporation|Ltd\.))/);
+  if (nameMatches && nameMatches[1]) {
+    companyName = nameMatches[1].trim();
+  }
 
   return {
-    companyName: `${ticker.toUpperCase()} Corporation`,
-    sector: 'Technology & Finance Services',
-    industry: 'Public Equities',
-    description: `${ticker.toUpperCase()} is researched as a major component of the terminal watchlist.`,
+    companyName,
+    sector: 'Technology & Corporate Services',
+    industry: 'Global Equities',
+    description: `${companyName} is analyzed under stock crawler frameworks.`,
     marketCap,
     peRatio,
     eps,
-    debtToEquity: 1.10,
+    debtToEquity,
     revenue,
     netIncome,
     freeCashFlow: Math.round(netIncome * 0.85)
@@ -129,7 +190,7 @@ const parseFinancialsWithGemini = async (ticker, searchResults) => {
 
   const genAI = new GoogleGenerativeAI(apiKey);
   const model = genAI.getGenerativeModel({
-    model: 'gemini-1.5-flash',
+    model: 'gemini-2.0-flash',
     generationConfig: { responseMimeType: 'application/json' }
   });
 
@@ -161,7 +222,7 @@ Return a valid JSON object matching this schema. If a metric is missing, use nul
 };
 
 /**
- * Fetch financial data using Tavily + Gemini, with fallback to regex extraction.
+ * Fetch financial data using Tavily + Gemini, with fallback to window extractor.
  */
 export const fetchFinancialData = async (ticker) => {
   const symbol = ticker.toUpperCase().trim();
@@ -176,7 +237,7 @@ export const fetchFinancialData = async (ticker) => {
       parsed = await parseFinancialsWithGemini(symbol, searchData);
       console.log(`Successfully extracted metrics via Gemini for ${symbol}: ${parsed.companyName}`);
     } catch (llmErr) {
-      console.warn(`Gemini parsing failed for ${symbol}: ${llmErr.message}. Executing regex parser fallback.`);
+      console.warn(`Gemini parsing failed for ${symbol}: ${llmErr.message}. Executing window extractor fallback.`);
       parsed = parseFinancialsWithRegex(symbol, searchData);
     }
 
