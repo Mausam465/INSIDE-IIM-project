@@ -4,15 +4,16 @@ dotenv.config();
 import { runInvestmentSequence } from './services/langchainService.js';
 
 async function test() {
-  console.log('Testing LangChain sequence with Gemini API Key from .env...');
-  const profile = { sector: 'Technology', industry: 'Consumer Electronics' };
-  const metrics = { marketCap: 2890000000000, peRatio: 28.5, eps: 4.97, revenue: 383000000000 };
+  console.log('Testing LangChain sequence with Gemini API Key from .env for TSLA...');
+  const profile = { sector: 'Automotive', industry: 'Electric Vehicles' };
+  const metrics = { marketCap: 570000000000, peRatio: 65.2, eps: 1.2, revenue: 96000000000 };
   const news = [
-    { title: 'AAPL Surge', source: 'Market News', url: '#', sentiment: 'POSITIVE' }
+    { title: 'TSLA Earnings Decline', source: 'Bloomberg', url: '#', sentiment: 'NEGATIVE' },
+    { title: 'TSLA Gigafactory Growth Expansion', source: 'Reuters', url: '#', sentiment: 'POSITIVE' }
   ];
 
   try {
-    const report = await runInvestmentSequence('AAPL', profile, metrics, news, 'Analyze financial stability');
+    const report = await runInvestmentSequence('TSLA', profile, metrics, news, 'Analyze production capacity');
     console.log('Report generated successfully!');
     console.log(JSON.stringify(report, null, 2));
   } catch (err) {
